@@ -2,10 +2,10 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bass Scale Trainer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Bass & Rhythm Mastery</title>
     <style>
-        /* --- CSS Variables --- */
+        /* --- 整合的共用 CSS Variables (以 Scale Trainer 為基礎) --- */
         :root {
             --bg-body: #121212;
             --bg-app: #1E1E1E;
@@ -17,16 +17,16 @@
             --string-line: #555555;
             --inlay: #000000;
             
-            --note-root: #D35400;   /* Root: Burnt Orange */
-            --note-active: #3498DB; /* Chord Tones: Blue */
-            --note-extension: #9B59B6; /* Extensions: Purple */
+            --note-root: #D35400;   
+            --note-active: #3498DB; 
+            --note-extension: #9B59B6; 
             --note-ghost: #2C2C2C;  
             
             --note-text-active: #ffffff;
             --note-text-ghost: #555555;
 
             --btn-bg: #2C2C2C;
-            --btn-border: #444;
+            --btn-border: #444444;
             --btn-active-bg: #3498DB;
             --btn-active-text: #ffffff;
         }
@@ -36,7 +36,7 @@
             background: var(--bg-body);
             color: var(--text-main);
             margin: 0;
-            padding: 10px;
+            padding: 15px 10px;
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -47,22 +47,25 @@
         .app-container {
             width: 100%;
             max-width: 1400px;
-            background: var(--bg-app);
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
             display: flex;
             flex-direction: column;
+            gap: 25px; /* 模組之間的間距 */
+        }
+
+        /* --- 共用面板樣式 --- */
+        .module-panel {
+            background: var(--bg-app);
+            border-radius: 12px;
+            border: 1px solid var(--btn-border);
+            box-shadow: 0 6px 25px rgba(0,0,0,0.4);
             overflow: hidden;
             position: relative;
         }
 
-        /* --- Header --- */
         .header-section {
             padding: 15px 20px;
             border-bottom: 1px solid var(--fret-line);
             background: var(--bg-app);
-            z-index: 10;
-            position: relative;
         }
 
         .header-top {
@@ -73,28 +76,10 @@
             gap: 10px;
         }
 
-        h1 { margin: 0; font-size: 1.2rem; color: var(--text-main); white-space: nowrap; }
+        h1 { margin: 0; font-size: 1.2rem; color: var(--text-main); font-weight: 600; letter-spacing: 0.5px;}
         
-        .switches-area { display: flex; gap: 10px; align-items: center; }
-
-        .controls-row {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            align-items: center;
-            width: 100%;
-            margin-top: 10px;
-        }
-
-        .control-group {
-            display: flex;
-            gap: 5px;
-            flex-wrap: wrap;
-            flex-grow: 1;
-        }
-
         select {
-            padding: 8px;
+            padding: 8px 12px;
             font-size: 0.9rem;
             border: 1px solid var(--btn-border);
             border-radius: 6px;
@@ -102,200 +87,209 @@
             color: var(--text-main);
             outline: none;
             min-width: 120px;
+            cursor: pointer;
         }
-        
-        select optgroup {
-            background-color: var(--bg-app);
-            color: var(--text-sub);
-            font-style: normal;
-            font-weight: bold;
+        select:focus { border-color: var(--note-active); }
+        select optgroup { background-color: var(--bg-app); color: var(--text-sub); }
+
+
+        /* =========================================
+           MODULE 1: FRETBOARD TRAINER
+        ========================================= */
+        .switches-area { display: flex; gap: 10px; align-items: center; }
+
+        .controls-row {
+            display: flex; gap: 8px; flex-wrap: wrap; align-items: center; width: 100%; margin-top: 12px;
         }
 
-        #exerciseModeSelect, #stringPairSelect, #stringTripletSelect, #stringQuadSelect, #stringQuintSelect {
+        #exerciseModeSelect, #stringPairSelect, #stringTripletSelect, #stringQuadSelect, #stringQuintSelect, #chordTypeSelect, #arpeggioStringSelect {
             border-color: var(--note-active);
             font-weight: bold;
         }
 
-        /* Toggles */
         .toggle-container {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: var(--bg-body);
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            user-select: none;
+            display: flex; align-items: center; gap: 6px;
+            background: var(--bg-body); padding: 5px 12px;
+            border-radius: 20px; font-size: 0.85rem; cursor: pointer;
             border: 1px solid var(--btn-border);
         }
         
         .toggle-switch {
-            position: relative;
-            width: 36px;
-            height: 18px;
-            background-color: #555;
-            border-radius: 20px;
-            transition: background-color 0.3s;
+            position: relative; width: 36px; height: 18px;
+            background-color: #555; border-radius: 20px; transition: 0.3s;
         }
         .toggle-switch::after {
-            content: '';
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            width: 14px;
-            height: 14px;
-            background-color: white;
-            border-radius: 50%;
-            transition: transform 0.3s;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+            content: ''; position: absolute; top: 2px; left: 2px;
+            width: 14px; height: 14px; background-color: white;
+            border-radius: 50%; transition: 0.3s;
         }
-        
         #multiModeCheck:checked + .toggle-switch { background-color: var(--note-active); }
         input[type="checkbox"]:checked + .toggle-switch::after { transform: translateX(18px); }
 
-        /* --- Buttons --- */
         .pos-buttons-container {
-            display: flex;
-            gap: 6px;
-            overflow-x: auto;
-            padding: 10px 15px;
-            background: var(--bg-app);
-            border-bottom: 1px solid var(--fret-line);
-            scrollbar-width: none;
-            z-index: 10;
-            scroll-behavior: smooth; /* Smooth scrolling for JS */
+            display: flex; gap: 8px; overflow-x: auto; padding: 12px 20px;
+            background: var(--bg-app); border-bottom: 1px solid var(--fret-line);
+            scrollbar-width: none; scroll-behavior: smooth;
         }
         .pos-buttons-container::-webkit-scrollbar { display: none; }
 
         .pos-btn {
-            white-space: nowrap;
-            padding: 6px 12px;
-            border: 1px solid var(--btn-border);
-            background: var(--btn-bg);
-            color: var(--text-sub);
-            border-radius: 15px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            transition: all 0.2s;
-            flex-shrink: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            line-height: 1.1;
-            min-width: 80px;
+            white-space: nowrap; padding: 6px 14px; border: 1px solid var(--btn-border);
+            background: var(--btn-bg); color: var(--text-sub); border-radius: 15px;
+            cursor: pointer; font-size: 0.85rem; transition: 0.2s;
+            display: flex; flex-direction: column; align-items: center; min-width: 80px;
         }
-        .pos-btn span.mode-name { font-size: 0.7rem; opacity: 0.8; font-weight: normal; margin-top: 2px; }
+        .pos-btn span.mode-name { font-size: 0.7rem; opacity: 0.8; margin-top: 3px; }
         .pos-btn.active {
-            background: var(--btn-active-bg);
-            color: var(--btn-active-text);
-            border-color: var(--btn-active-bg);
-            font-weight: 600;
-            transform: scale(1.05); /* Slight pop effect */
+            background: var(--btn-active-bg); color: var(--btn-active-text);
+            border-color: var(--btn-active-bg); font-weight: 600; transform: scale(1.05);
         }
 
-        /* --- Fretboard Wrapper --- */
         .fretboard-wrapper {
-            width: 100%;
-            height: 60vh; 
-            min-height: 300px;
-            background: var(--bg-app);
-            position: relative;
-            overflow: hidden;
-            touch-action: none; 
-            cursor: grab;
+            width: 100%; height: 50vh; min-height: 250px; background: var(--bg-app);
+            position: relative; overflow: hidden; touch-action: none; cursor: grab;
         }
-        
-        .fretboard-wrapper:active {
-            cursor: grabbing;
-        }
+        .fretboard-wrapper:active { cursor: grabbing; }
+        svg { display: block; width: 100%; height: 100%; pointer-events: none; }
 
-        svg {
-            display: block;
-            width: 100%; 
-            height: 100%;
-            pointer-events: none; 
-        }
-
-        /* Legend */
         .legend {
-            display: flex;
-            gap: 15px;
-            padding: 10px 15px;
-            font-size: 0.75rem;
-            background: var(--bg-body);
-            border-top: 1px solid var(--fret-line);
-            justify-content: center;
-            flex-wrap: wrap;
-            color: var(--text-sub);
-            z-index: 10;
+            display: flex; gap: 15px; padding: 12px 20px; font-size: 0.8rem;
+            background: var(--bg-body); border-top: 1px solid var(--fret-line);
+            justify-content: center; flex-wrap: wrap; color: var(--text-sub);
         }
-        .legend-item { display: flex; align-items: center; gap: 4px; }
+        .legend-item { display: flex; align-items: center; gap: 6px; }
         .dot { width: 10px; height: 10px; border-radius: 50%; }
-        
-        .note-text { 
-            font-family: Arial, sans-serif; 
-            font-weight: bold; 
-            font-size: 10px; 
-            pointer-events: none; 
-            text-rendering: geometricPrecision; 
-        }
+        .note-text { font-family: inherit; font-weight: bold; font-size: 10px; }
 
-        /* Reset Button */
         .reset-zoom-btn {
-            position: absolute;
-            bottom: 60px;
-            right: 20px;
-            background: rgba(0,0,0,0.6);
-            color: white;
-            border: 1px solid #555;
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            z-index: 20;
+            position: absolute; bottom: 50px; right: 20px; background: rgba(0,0,0,0.6);
+            color: white; border: 1px solid var(--btn-border); padding: 6px 12px;
+            border-radius: 6px; font-size: 0.8rem; cursor: pointer; z-index: 20; transition: 0.2s;
         }
-        .reset-zoom-btn:hover { background: var(--btn-active-bg); }
+        .reset-zoom-btn:hover { background: var(--note-active); border-color: var(--note-active); }
         
         .hidden { display: none !important; }
 
-        /* Keyboard hint */
-        .kbd-hint {
-            font-size: 0.7rem;
-            color: var(--text-sub);
-            margin-left: 10px;
-            opacity: 0.7;
+        /* =========================================
+           MODULE 2: RHYTHM TRAINER
+        ========================================= */
+        .rhythm-controls-top {
+            display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-around;
+            padding: 15px 20px; border-bottom: 1px solid var(--fret-line);
+            background: var(--bg-app);
         }
 
+        .rc-group { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .rc-label { font-size: 0.8rem; color: var(--text-sub); font-weight: normal; }
+        .val-display { font-size: 0.9rem; font-weight: bold; color: var(--note-active); }
+
+        /* 滑桿統一化 */
+        input[type="range"] { -webkit-appearance: none; width: 100px; background: transparent; height: 20px; }
+        input[type="range"]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: var(--btn-border); border-radius: 2px;}
+        input[type="range"]::-webkit-slider-thumb { 
+            -webkit-appearance: none; height: 16px; width: 16px; 
+            border-radius: 50%; background: var(--note-active); margin-top: -6px; cursor: pointer; 
+        }
+
+        /* 舞台區 (底色加深創造空間感) */
+        .rhythm-stage {
+            display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; align-items: center;
+            background: var(--bg-body); padding: 30px 20px; min-height: 140px;
+        }
+
+        /* 節奏卡片 */
+        .beat-card {
+            border: 2px solid var(--btn-border); border-radius: 8px; width: 100px; height: 100px;
+            display: flex; justify-content: center; align-items: center; transition: 0.15s ease;
+            background: var(--btn-bg);
+        }
+        .beat-card.active {
+            border-color: var(--note-active); transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(52, 152, 219, 0.3); background: var(--bg-app);
+        }
+        .beat-card.changing { animation: cardUpdate 0.2s; }
+        @keyframes cardUpdate { 0% { opacity: 0.5; transform: scale(0.95); } 100% { opacity: 1; transform: scale(1); } }
+        
+        .beat-card .svg-container { width: 70%; height: 70%; opacity: 0.6; transition: 0.15s; }
+        .beat-card.active .svg-container { opacity: 1; }
+        .beat-card svg { width: 100%; height: 100%; fill: var(--text-main); }
+
+        /* 播放控制列 */
+        .playback-bar {
+            display: flex; align-items: center; justify-content: center; gap: 30px;
+            background: var(--bg-app); padding: 15px; border-top: 1px solid var(--fret-line); border-bottom: 1px solid var(--fret-line);
+        }
+
+        .btn-circle {
+            width: 55px; height: 55px; border-radius: 50%; background: var(--btn-bg);
+            border: 2px solid var(--btn-border); color: var(--text-main);
+            cursor: pointer; display: flex; justify-content: center; align-items: center; transition: 0.2s;
+        }
+        .btn-circle:hover { border-color: var(--note-active); color: var(--note-active); }
+        .btn-circle.playing {
+            border-color: var(--note-active); color: var(--btn-active-text);
+            background: var(--note-active); box-shadow: 0 0 15px rgba(52, 152, 219, 0.4);
+        }
+
+        .btn-pill {
+            padding: 10px 24px; border-radius: 25px; border: 1px solid var(--btn-border);
+            background: var(--btn-bg); color: var(--text-sub); font-size: 0.85rem; font-weight: bold;
+            cursor: pointer; transition: 0.2s; 
+        }
+        .btn-pill:hover { border-color: var(--note-active); color: var(--text-main); }
+        .btn-pill.active {
+            background: var(--btn-active-bg); color: var(--btn-active-text); border-color: var(--btn-active-bg);
+        }
+
+        /* 節奏圖庫面板 */
+        .library-panel { background: var(--bg-app); padding: 20px; }
+        .library-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .library-title { font-size: 1rem; font-weight: bold; color: var(--text-main); }
+        
+        .pattern-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 12px; max-height: 500px; overflow-y: auto; transition: 0.3s; }
+        .pattern-grid.collapsed { max-height: 0; opacity: 0; margin: 0; overflow: hidden; }
+        
+        .pattern-item {
+            aspect-ratio: 1; border: 1px solid var(--btn-border); background: var(--btn-bg); border-radius: 6px;
+            cursor: pointer; display: flex; justify-content: center; align-items: center; padding: 6px; opacity: 0.5; transition: 0.2s;
+        }
+        .pattern-item:hover { border-color: var(--text-sub); opacity: 0.8; }
+        .pattern-item.selected { border-color: var(--note-active); opacity: 1; background: rgba(52, 152, 219, 0.15); box-shadow: 0 0 8px rgba(52, 152, 219, 0.3);}
+        .pattern-item svg { width: 100%; height: 100%; pointer-events: none; fill: var(--text-main); }
+
+        .btn-sm { padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; border: 1px solid var(--btn-border); background: var(--btn-bg); color: var(--text-main); cursor: pointer; font-weight: bold; transition: 0.2s;}
+        .btn-sm:hover { background: var(--note-active); border-color: var(--note-active); color: var(--btn-active-text);}
     </style>
+    <script>window.ALL_PATTERNS = [];</script>
 </head>
 <body>
 
     <div class="app-container">
-        <div class="header-section">
-            <div class="header-top">
-                <h1>Bass Scale Trainer</h1>
-                <div class="switches-area">
-                    <span class="kbd-hint">Use ← → keys</span>
-                    <label class="toggle-container">
-                        <input type="checkbox" id="multiModeCheck" onchange="toggleMultiMode()">
-                        <div class="toggle-switch"></div>
-                        <span>Multi Select</span>
-                    </label>
+        
+        <div class="module-panel">
+            <div class="header-section">
+                <div class="header-top">
+                    <h1>Bass Fretboard Trainer</h1>
+                    <div class="switches-area">
+                        <label class="toggle-container">
+                            <input type="checkbox" id="multiModeCheck">
+                            <div class="toggle-switch"></div>
+                            <span>Multi Select</span>
+                        </label>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="controls-row">
-                <select id="exerciseModeSelect" onchange="toggleExerciseMode()">
-                    <option value="scale">模式: 全指板音階 (Standard)</option>
-                    <option value="pair_drill">模式: 雙弦模進 (2-String)</option>
-                    <option value="triplet_drill" selected>模式: 三弦模進 (3-String)</option>
-                    <option value="quad_drill">模式: 四弦模進 (4-String)</option>
-                    <option value="quint_drill">模式: 五弦模進 (5-String)</option>
-                </select>
+                
+                <div class="controls-row">
+                    <select id="exerciseModeSelect">
+                        <option value="scale">模式: 全指板音階</option>
+                        <option value="arpeggio" selected>模式: 和弦指法</option>
+                        <option value="pair_drill">模式: 雙弦模進</option>
+                        <option value="triplet_drill">模式: 三弦模進</option>
+                        <option value="quad_drill">模式: 四弦模進</option>
+                        <option value="quint_drill">模式: 五弦模進</option>
+                    </select>
 
-                <div class="control-group">
-                    <select id="keySelect" onchange="resetAndUpdate()">
+                    <select id="keySelect">
                         <option value="0">Key: C</option>
                         <option value="1">Key: Db</option>
                         <option value="2">Key: D</option>
@@ -310,777 +304,160 @@
                         <option value="11">Key: B</option>
                     </select>
 
-                    <select id="scaleSelect" onchange="resetAndUpdate()">
+                    <select id="scaleSelect" class="hidden">
                         <optgroup label="Basic Scales">
-                            <option value="major">Scale: Major (Ionian)</option>
-                            <option value="minor">Scale: Natural Minor</option>
-                            <option value="maj_pent">Scale: Major Pentatonic</option>
-                            <option value="min_pent">Scale: Minor Pentatonic</option>
+                            <option value="major">Major (Ionian)</option>
+                            <option value="minor">Natural Minor</option>
+                            <option value="maj_pent">Major Pentatonic</option>
+                            <option value="min_pent">Minor Pentatonic</option>
+                        </optgroup>
+                    </select>
+                    
+                    <select id="chordTypeSelect" class="hidden">
+                        <optgroup label="三和弦">
+                            <option value="maj">Major</option>
+                            <option value="min">Minor</option>
+                            <option value="dim">Diminished</option>
+                            <option value="aug">Augmented</option>
+                        </optgroup>
+                        <optgroup label="七和弦">
+                            <option value="maj7">Maj7</option>
+                            <option value="dom7">Dom 7</option>
+                            <option value="min7">m7</option>
+                            <option value="m7b5">m7b5</option>
+                            <option value="dim7">dim7</option>
+                            <option value="mM7">mM7</option>
                         </optgroup>
                     </select>
 
-                    <select id="stringPairSelect" class="hidden" onchange="resetAndUpdate()">
-                        <option value="0,1">練習: D & G (High)</option>
-                        <option value="1,2">練習: A & D (Mid)</option>
-                        <option value="2,3">練習: E & A (Mid-Low)</option>
-                        <option value="3,4">練習: B & E (Low)</option>
-                    </select>
-                    
-                    <select id="stringTripletSelect" class="hidden" onchange="resetAndUpdate()">
-                        <option value="0,1,2">練習: A-D-G (High Set)</option>
-                        <option value="1,2,3">練習: E-A-D (Standard)</option>
-                        <option value="2,3,4" selected>練習: B-E-A (Low Set)</option>
+                    <select id="arpeggioStringSelect" class="hidden">
+                        <option value="4">起始弦: B String</option>
+                        <option value="3" selected>起始弦: E String</option>
+                        <option value="2">起始弦: A String</option>
+                        <option value="1">起始弦: D String</option>
                     </select>
 
-                    <select id="stringQuadSelect" class="hidden" onchange="resetAndUpdate()">
-                        <option value="0,1,2,3">練習: E-A-D-G (Standard 4)</option>
-                        <option value="1,2,3,4" selected>練習: B-E-A-D (Low 4)</option>
+                    <select id="stringPairSelect" class="hidden">
+                        <option value="0,1">D & G (High)</option>
+                        <option value="1,2">A & D (Mid)</option>
+                        <option value="2,3">E & A (Mid-Low)</option>
+                        <option value="3,4">B & E (Low)</option>
+                    </select>
+                    <select id="stringTripletSelect" class="hidden">
+                        <option value="0,1,2">A-D-G (High)</option>
+                        <option value="1,2,3">E-A-D (Std)</option>
+                        <option value="2,3,4" selected>B-E-A (Low)</option>
+                    </select>
+                    <select id="stringQuadSelect" class="hidden">
+                        <option value="0,1,2,3">E-A-D-G (Std 4)</option>
+                        <option value="1,2,3,4" selected>B-E-A-D (Low 4)</option>
+                    </select>
+                    <select id="stringQuintSelect" class="hidden">
+                        <option value="0,1,2,3,4" selected>B-E-A-D-G (Full 5)</option>
                     </select>
 
-                    <select id="stringQuintSelect" class="hidden" onchange="resetAndUpdate()">
-                        <option value="0,1,2,3,4" selected>練習: B-E-A-D-G (Full 5)</option>
-                    </select>
-
-                    <select id="viewModeSelect" onchange="updateApp()">
+                    <select id="viewModeSelect">
                         <option value="notes">顯示: 音名</option>
-                        <option value="solfege" selected>顯示: 唱名</option>
-                        <option value="intervals">顯示: 級數</option>
+                        <option value="solfege">顯示: 唱名</option>
+                        <option value="intervals" selected>顯示: 級數</option>
                     </select>
                 </div>
             </div>
+
+            <div class="pos-buttons-container" id="posBtnContainer"></div>
+
+            <div class="fretboard-wrapper" id="zoomContainer">
+                <svg id="fretboard" viewBox="0 0 1650 240" preserveAspectRatio="xMidYMid meet"></svg>
+            </div>
+            <button class="reset-zoom-btn" id="resetZoomBtn">Reset View</button>
+
+            <div class="legend">
+                <div class="legend-item"><span class="dot" style="background:var(--note-root)"></span>根音</div>
+                <div class="legend-item"><span class="dot" style="background:var(--note-active)"></span>組成音</div>
+                <div class="legend-item"><span class="dot" style="background:var(--note-extension)"></span>特徵音</div>
+            </div>
         </div>
 
-        <div class="pos-buttons-container" id="posBtnContainer"></div>
+        <div class="module-panel">
+            <div class="header-section">
+                <div class="header-top">
+                    <h1>Rhythm Generator</h1>
+                </div>
+            </div>
+            <div class="rhythm-controls-top">
+                <div class="rc-group">
+                    <span class="rc-label">Meter</span>
+                    <select id="timeSigSelect">
+                        <option value="4/4" selected>4/4 SIMPLE</option>
+                        <option value="2/4">2/4 SIMPLE</option>
+                        <option value="3/4">3/4 SIMPLE</option>
+                        <option value="5/4">5/4 SIMPLE</option>
+                        <option disabled>──────────</option>
+                        <option value="6/8">6/8 COMPOUND</option>
+                        <option value="9/8">9/8 COMPOUND</option>
+                        <option value="12/8">12/8 COMPOUND</option>
+                    </select>
+                </div>
+                
+                <div class="rc-group">
+                    <span class="rc-label">Tempo</span>
+                    <span id="bpmDisplay" class="val-display">100</span>
+                    <input type="range" id="bpmSlider" min="40" max="200" value="100">
+                </div>
+                
+                <div class="rc-group">
+                    <span class="rc-label">Kick Vol</span>
+                    <input type="range" id="kickVolSlider" min="0" max="100" value="80">
+                </div>
+                
+                <div class="rc-group">
+                    <span class="rc-label">Clap Vol</span>
+                    <input type="range" id="clapVolSlider" min="0" max="100" value="80">
+                </div>
 
-        <div class="fretboard-wrapper" id="zoomContainer">
-            <svg id="fretboard" viewBox="0 0 1650 240" preserveAspectRatio="xMidYMid meet">
-            </svg>
-        </div>
-        <button class="reset-zoom-btn" onclick="resetView()">Reset View</button>
+                <div class="rc-group">
+                    <span class="rc-label">Chaos</span>
+                    <span id="shuffleDisplay" class="val-display">0%</span>
+                    <input type="range" id="shuffleSlider" min="0" max="100" value="0">
+                </div>
+            </div>
 
-        <div class="legend">
-            <div class="legend-item"><span class="dot" style="background:var(--note-root)"></span>根音 (Root)</div>
-            <div class="legend-item"><span class="dot" style="background:var(--note-active)"></span>組成音</div>
-            <div class="legend-item"><span class="dot" style="background:var(--note-extension)"></span>延伸音</div>
+            <div class="rhythm-stage" id="displayArea"></div>
+
+            <div class="playback-bar">
+                <button class="btn-pill" id="randomRhythmBtn">⟳ Randomize</button>
+                <button class="btn-circle" id="playBtn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                </button>
+                <button class="btn-pill active" id="kickBtn">● Kick</button>
+            </div>
+
+            <div class="library-panel">
+                <div class="library-header">
+                    <div style="display:flex; align-items:center; gap:15px;">
+                        <button class="btn-sm" id="toggleLibBtn">▼</button>
+                        <span class="library-title" id="libTitle">Pattern Library</span>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <button class="btn-sm" id="selectAllBtn">ALL</button>
+                        <button class="btn-sm" id="deselectAllBtn">NONE</button>
+                    </div>
+                </div>
+                <div class="pattern-grid" id="libraryGrid"></div>
+            </div>
         </div>
+
     </div>
 
-<script>
-    const FRETS = 24;
-    const TUNING = [7, 2, 9, 4, 11]; // G, D, A, E, B (0=G, 4=B)
-    const STRINGS = 5;
-
-    // SVG Base Dimensions
-    const BASE_W = 1650;
-    const BASE_H = 240;
-    const X_START = 50;
-    const Y_START = 30;
-    const FRET_WIDTH = 65;
-    const STRING_GAP = 40;
-
-    const NOTES_FLAT =  ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
-    const NOTES_SHARP = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-
-    const SCALES = {
-        'major':    [0, 2, 4, 5, 7, 9, 11],
-        'minor':    [0, 2, 3, 5, 7, 8, 10],
-        'maj_pent': [0, 2, 4, 7, 9],
-        'min_pent': [0, 3, 5, 7, 10]
-    };
-
-    const INTERVAL_NAMES = {
-        'major':    ['R', '2', '3', '4', '5', '6', '7'],
-        'minor':    ['R', '2', 'b3', '4', '5', 'b6', 'b7'],
-        'maj_pent': ['R', '2', '3', '5', '6'],
-        'min_pent': ['R', 'b3', '4', '5', 'b7']
-    };
-    
-    const CN_INTERVAL_MAP = {
-        'R': '純1',
-        'b2': '小2', '2': '大2',
-        'b3': '小3', '3': '大3',
-        '4': '純4', '#4': '增4', 'b5': '減5',
-        '5': '純5', '#5': '增5',
-        'b6': '小6', '6': '大6',
-        'b7': '小7', 'bb7': '減7', '7': '大7'
-    };
-    
-    const SOLFEGE_MAP = {
-        'R': 'Do', '2': 'Re', '3': 'Mi', 'b3': 'Me', 
-        '4': 'Fa', '#4': 'Fi', 'b5': 'Se', 
-        '5': 'So', '#5': 'Si',
-        '6': 'La', 'b6': 'Le', 
-        '7': 'Si', 'b7': 'Te', 'bb7': 'La'
-    };
-
-    const SCALE_MODE_NAMES = {
-        'major': ["Ionian", "Dorian", "Phrygian", "Lydian", "Mixolydian", "Aeolian", "Locrian"],
-        'minor': ["Aeolian", "Locrian", "Ionian", "Dorian", "Phrygian", "Lydian", "Mixo"],
-        'maj_pent': ["Shape 1", "Shape 2", "Shape 3", "Shape 4", "Shape 5"],
-        'min_pent': ["Shape 1", "Shape 2", "Shape 3", "Shape 4", "Shape 5"]
-    };
-
-    let currentRoot = 0;
-    let currentScaleType = 'major';
-    let currentViewMode = 'solfege';
-    let exerciseMode = 'triplet_drill'; 
-    let selectedStrings = [2, 3, 4]; // Default A, E, B
-
-    let activeAnchors = new Set([]); 
-    let generatedPositions = []; 
-    let isMultiMode = false;
-
-    // --- Core Logic ---
-
-    function getNoteValue(stringIdx, fret) {
-        return (TUNING[stringIdx] + fret) % 12;
-    }
-
-    function getNoteName(val, interval) {
-        if (interval && interval.includes('#')) return NOTES_SHARP[val];
-        if (interval && interval.includes('b')) return NOTES_FLAT[val];
-        return NOTES_FLAT[val];
-    }
-
-    function getIntervalLabel(noteVal) {
-        let type = (exerciseMode !== 'scale') ? 'major' : currentScaleType;
-        const scaleIntervals = SCALES[type];
-        const scaleNotes = scaleIntervals.map(i => (parseInt(currentRoot) + i) % 12);
-        
-        const idx = scaleNotes.indexOf(noteVal);
-        if (idx !== -1) {
-            return INTERVAL_NAMES[type][idx];
-        }
-        return null;
-    }
-
-    function getSolfegeLabel(noteVal) {
-        let interval = getIntervalLabel(noteVal);
-        return SOLFEGE_MAP[interval] || interval || "?";
-    }
-
-    // --- Generator Logic ---
-
-    function generateDynamicPositions(scaleNotes) {
-        let positions = [];
-        let bStringBase = TUNING[4]; 
-        let modeNames = SCALE_MODE_NAMES[currentScaleType] || [];
-        
-        for (let f = 0; f <= 22; f++) {
-            let noteVal = (bStringBase + f) % 12;
-            let scaleIndex = scaleNotes.indexOf(noteVal);
-            
-            if (scaleIndex !== -1) {
-                let modeName = modeNames[scaleIndex % modeNames.length] || "";
-                positions.push({
-                    anchorFret: f, 
-                    noteVal: noteVal,
-                    modeName: modeName,
-                    id: f
-                });
-            }
-        }
-        return positions;
-    }
-
-    /**
-     * UNIFIED DRILL GENERATOR
-     */
-    function generateSequenceDrillPositions() {
-        let positions = [];
-        let scaleIntervals = SCALES['major']; 
-        let scaleNotes = scaleIntervals.map(i => (parseInt(currentRoot) + i) % 12);
-        let modeNames = SCALE_MODE_NAMES['major'];
-
-        // Sort selected strings High Index (Low Pitch) -> Low Index (High Pitch)
-        let sortedStrings = [...selectedStrings].sort((a,b) => b-a);
-
-        // Iterate through frets to find starting points on the lowest string
-        for (let f = 0; f <= FRETS; f++) {
-            let startString = sortedStrings[0]; // Lowest string
-            let noteVal = getNoteValue(startString, f);
-            let scaleIdx = scaleNotes.indexOf(noteVal); 
-
-            if (scaleIdx !== -1) {
-                let stepNotes = [];
-                let validSequence = true;
-                let currentScaleStep = scaleIdx;
-                
-                // Loop through each string in the sequence
-                for (let i = 0; i < sortedStrings.length; i++) {
-                    let s = sortedStrings[i];
-                    // Standard 3NPS logic: usually stays near anchor fret
-                    let searchStart = f; 
-                    
-                    for (let n = 0; n < 3; n++) {
-                        let targetVal = scaleNotes[currentScaleStep % 7];
-                        let foundFret = -1;
-
-                        // Scan a reasonable range (0 to +5 frets from anchor)
-                        for (let scan = 0; scan < 6; scan++) {
-                            let tryFret = searchStart + scan;
-                            if (tryFret > FRETS) continue;
-                            if (getNoteValue(s, tryFret) === targetVal) {
-                                foundFret = tryFret;
-                                break; 
-                            }
-                        }
-
-                        if (foundFret === -1) {
-                            validSequence = false;
-                            break;
-                        }
-
-                        stepNotes.push({ s: s, fret: foundFret, val: getNoteValue(s, foundFret) });
-                        currentScaleStep++;
-                    }
-                    if (!validSequence) break;
-                }
-
-                if (validSequence) {
-                    let solfegeStart = SOLFEGE_MAP[INTERVAL_NAMES['major'][scaleIdx]];
-                    let strCount = sortedStrings.length;
-                    positions.push({
-                        id: f, 
-                        label: `Start: ${solfegeStart}`,
-                        subLabel: `${modeNames[scaleIdx]} (${strCount}-Str)`,
-                        notes: stepNotes
-                    });
-                }
-            }
-        }
-        return positions;
-    }
-
-
-    function getNotesForAnchor(anchorId, scaleNotes) {
-        if (exerciseMode !== 'scale') {
-            // All Drill Modes
-            let pos = generatedPositions.find(p => p.id === anchorId);
-            if (!pos) return [];
-            return pos.notes.map(n => ({
-                s: n.s,
-                fret: n.fret,
-                val: n.val,
-                isRoot: n.val === parseInt(currentRoot)
-            }));
-        } else {
-            // Standard Crawler Logic
-            let anchorFret = anchorId;
-            let activeNotes = [];
-            let notesPerOctave = scaleNotes.length;
-            let currentStringStart = anchorFret; 
-            let isOpenMode = (anchorFret === 0);
-
-            for (let s = 4; s >= 0; s--) {
-                let stringBase = TUNING[s];
-                let notesFoundOnString = [];
-                let searchWidth = 5; 
-                
-                let minFret, maxFret;
-
-                if (isOpenMode) {
-                    minFret = 0;
-                    maxFret = 4;
-                } else {
-                    minFret = Math.max(0, currentStringStart);
-                    maxFret = minFret + searchWidth;
-                }
-                if (maxFret > FRETS) maxFret = FRETS;
-
-                for (let f = minFret; f <= maxFret; f++) {
-                    let val = (stringBase + f) % 12;
-                    if (scaleNotes.includes(val)) {
-                        notesFoundOnString.push({
-                            s: s,
-                            fret: f,
-                            val: val,
-                            isRoot: val === parseInt(currentRoot)
-                        });
-                    }
-                }
-
-                let countToTake = 3; 
-                let chosen = notesFoundOnString.slice(0, countToTake);
-
-                chosen.forEach(n => {
-                    activeNotes.push({
-                        s: n.s,
-                        fret: n.fret,
-                        val: n.val,
-                        isRoot: n.isRoot
-                    });
-                });
-
-                if (chosen.length > 0) {
-                    if (isOpenMode) {
-                        currentStringStart = 0;
-                    } else {
-                        let firstFret = chosen[0].fret;
-                        if (firstFret === 0 && chosen.length > 1) firstFret = chosen[1].fret;
-                        currentStringStart = firstFret;
-                    }
-                }
-            }
-            return activeNotes;
-        }
-    }
-
-    // --- Interaction ---
-    function toggleMultiMode() {
-        const checkbox = document.getElementById('multiModeCheck');
-        isMultiMode = checkbox.checked;
-        if (!isMultiMode && activeAnchors.size > 1) {
-            const first = activeAnchors.values().next().value;
-            activeAnchors.clear();
-            activeAnchors.add(first);
-        }
-        updateApp();
-    }
-
-    function toggleExerciseMode() {
-        exerciseMode = document.getElementById('exerciseModeSelect').value;
-        
-        const selectors = [
-            'scaleSelect', 
-            'stringPairSelect', 
-            'stringTripletSelect', 
-            'stringQuadSelect', 
-            'stringQuintSelect'
-        ];
-        
-        selectors.forEach(id => document.getElementById(id).classList.add('hidden'));
-
-        if (exerciseMode === 'scale') {
-            document.getElementById('scaleSelect').classList.remove('hidden');
-            currentScaleType = document.getElementById('scaleSelect').value;
-        } else if (exerciseMode === 'pair_drill') {
-            document.getElementById('stringPairSelect').classList.remove('hidden');
-            currentScaleType = 'major'; 
-        } else if (exerciseMode === 'triplet_drill') {
-            document.getElementById('stringTripletSelect').classList.remove('hidden');
-            currentScaleType = 'major';
-        } else if (exerciseMode === 'quad_drill') {
-            document.getElementById('stringQuadSelect').classList.remove('hidden');
-            currentScaleType = 'major';
-        } else if (exerciseMode === 'quint_drill') {
-            document.getElementById('stringQuintSelect').classList.remove('hidden');
-            currentScaleType = 'major';
-        }
-        resetAndUpdate();
-    }
-
-    function resetAndUpdate() {
-        currentRoot = parseInt(document.getElementById('keySelect').value);
-        
-        if (exerciseMode === 'scale') {
-            currentScaleType = document.getElementById('scaleSelect').value;
-            const scaleIntervals = SCALES[currentScaleType];
-            const scaleNotes = scaleIntervals.map(i => (parseInt(currentRoot) + i) % 12);
-            generatedPositions = generateDynamicPositions(scaleNotes);
-        } else {
-            let selectorId = '';
-            if (exerciseMode === 'pair_drill') selectorId = 'stringPairSelect';
-            else if (exerciseMode === 'triplet_drill') selectorId = 'stringTripletSelect';
-            else if (exerciseMode === 'quad_drill') selectorId = 'stringQuadSelect';
-            else if (exerciseMode === 'quint_drill') selectorId = 'stringQuintSelect';
-
-            let val = document.getElementById(selectorId).value.split(',').map(Number);
-            selectedStrings = val;
-            generatedPositions = generateSequenceDrillPositions();
-        }
-        
-        // Reset to first position if needed, or keep active if valid
-        if (!isMultiMode || activeAnchors.size === 0) {
-            activeAnchors.clear();
-            if(generatedPositions.length > 0) activeAnchors.add(generatedPositions[0].id);
-        }
-        updateApp();
-    }
-
-    function handlePosClick(id) {
-        if (isMultiMode) {
-            if (activeAnchors.has(id)) activeAnchors.delete(id);
-            else activeAnchors.add(id);
-        } else {
-            activeAnchors.clear();
-            activeAnchors.add(id);
-        }
-        updateApp();
-    }
-
-    function updateApp() {
-        currentViewMode = document.getElementById('viewModeSelect').value;
-        let scaleIntervals = SCALES['major'];
-        if (exerciseMode === 'scale') scaleIntervals = SCALES[currentScaleType];
-        
-        const scaleNotes = scaleIntervals.map(i => (parseInt(currentRoot) + i) % 12);
-
-        const btnContainer = document.getElementById('posBtnContainer');
-        btnContainer.innerHTML = '';
-        
-        generatedPositions.forEach((pos, idx) => {
-            let btn = document.createElement('button');
-            btn.className = 'pos-btn';
-            btn.dataset.id = pos.id; // Store ID for auto-scroll logic
-            if (activeAnchors.has(pos.id)) btn.classList.add('active');
-            
-            if (exerciseMode === 'scale') {
-                let label = (pos.id === 0) ? "Open" : `Pos ${idx + 1}`;
-                btn.innerHTML = `${label}<span class="mode-name">${pos.modeName}</span>`;
-            } else {
-                btn.innerHTML = `${pos.label}<span class="mode-name">${pos.subLabel}</span>`;
-            }
-            
-            btn.onclick = () => handlePosClick(pos.id);
-            btnContainer.appendChild(btn);
-        });
-
-        drawFretboard(scaleNotes);
-    }
-
-    // --- Drawing ---
-    function drawFretboard(scaleNotes) {
-        const svg = document.getElementById('fretboard');
-        svg.innerHTML = '';
-
-        for (let f = 0; f <= FRETS; f++) {
-            let x = X_START + (f * FRET_WIDTH);
-            let isNut = (f === 0);
-            
-            let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            line.setAttribute("x1", x); line.setAttribute("y1", Y_START);
-            line.setAttribute("x2", x); line.setAttribute("y2", Y_START + 4 * STRING_GAP);
-            line.setAttribute("stroke", isNut ? "var(--nut-line)" : "var(--fret-line)");
-            line.setAttribute("stroke-width", isNut ? 5 : 2);
-            svg.appendChild(line);
-
-            if (f > 0) {
-                let txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                txt.setAttribute("x", x - FRET_WIDTH/2);
-                txt.setAttribute("y", Y_START - 10);
-                txt.setAttribute("text-anchor", "middle");
-                txt.setAttribute("fill", "var(--text-sub)");
-                txt.setAttribute("font-size", "12");
-                txt.textContent = f;
-                svg.appendChild(txt);
-            }
-
-            let cx = x - FRET_WIDTH/2;
-            let cy = Y_START + 2 * STRING_GAP;
-            if ([3,5,7,9,15,17,19,21].includes(f)) drawInlay(svg, cx, cy, false);
-            if ([12, 24].includes(f)) drawInlay(svg, cx, cy, true);
-        }
-
-        for (let s = 0; s < STRINGS; s++) {
-            let y = Y_START + (s * STRING_GAP);
-            let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            line.setAttribute("x1", X_START); line.setAttribute("y1", y);
-            line.setAttribute("x2", X_START + (FRETS * FRET_WIDTH)); line.setAttribute("y2", y);
-            line.setAttribute("stroke", "var(--string-line)");
-            line.setAttribute("stroke-width", 1 + s * 0.5);
-            svg.appendChild(line);
-        }
-
-        if (exerciseMode === 'scale') {
-            for (let s = 0; s < STRINGS; s++) {
-                for (let f = 0; f <= FRETS; f++) {
-                    let val = getNoteValue(s, f);
-                    if (scaleNotes.includes(val)) {
-                        drawNoteCircle(svg, s, f, val, false);
-                    }
-                }
-            }
-        } else {
-            selectedStrings.forEach(s => {
-                for (let f = 0; f <= FRETS; f++) {
-                    let val = getNoteValue(s, f);
-                    if (scaleNotes.includes(val)) {
-                        drawNoteCircle(svg, s, f, val, false);
-                    }
-                }
-            });
-        }
-
-        let mergedActiveNotes = new Map();
-        activeAnchors.forEach(anchorId => {
-            let notes = getNotesForAnchor(anchorId, scaleNotes);
-            notes.forEach(n => {
-                let key = `${n.s}-${n.fret}`;
-                if (!mergedActiveNotes.has(key) || n.isRoot) {
-                    mergedActiveNotes.set(key, n);
-                }
-            });
-        });
-
-        mergedActiveNotes.forEach(n => {
-            if (n.fret <= FRETS) {
-                drawNoteCircle(svg, n.s, n.fret, n.val, true);
-            }
-        });
-    }
-
-    function drawInlay(svg, cx, cy, isDouble) {
-        if (isDouble) {
-            createCircle(svg, cx, cy - 15, 5, "var(--inlay)");
-            createCircle(svg, cx, cy + 15, 5, "var(--inlay)");
-        } else {
-            createCircle(svg, cx, cy, 5, "var(--inlay)");
-        }
-    }
-
-    function createCircle(svg, cx, cy, r, fill) {
-        let c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        c.setAttribute("cx", cx); c.setAttribute("cy", cy); c.setAttribute("r", r);
-        c.setAttribute("fill", fill);
-        svg.appendChild(c);
-    }
-
-    function drawNoteCircle(svg, s, f, val, isActive) {
-        let cx = X_START + (f * FRET_WIDTH) - (FRET_WIDTH/2);
-        if (f === 0) cx = X_START - 20;
-
-        let cy = Y_START + (s * STRING_GAP);
-        let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-
-        let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        circle.setAttribute("cx", cx);
-        circle.setAttribute("cy", cy);
-        
-        let isRoot = (val === parseInt(currentRoot));
-        let intervalLabel = getIntervalLabel(val);
-        let isExtension = ['9', '11', '#11', '13', 'b9', '#9', 'b13'].includes(intervalLabel);
-
-        if (isActive) {
-            circle.setAttribute("r", 14);
-            let color;
-            if (isRoot) color = "var(--note-root)";
-            else if (isExtension) color = "var(--note-extension)";
-            else color = "var(--note-active)";
-            
-            circle.setAttribute("fill", color);
-            circle.setAttribute("stroke", "var(--bg-app)");
-            circle.setAttribute("stroke-width", 2);
-        } else {
-            circle.setAttribute("r", 8);
-            circle.setAttribute("fill", "var(--note-ghost)"); 
-        }
-        g.appendChild(circle);
-
-        if (isActive || f === 0) {
-            let txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
-            txt.setAttribute("x", cx);
-            txt.setAttribute("y", cy + 1);
-            txt.setAttribute("dominant-baseline", "central");
-            txt.setAttribute("text-anchor", "middle");
-            txt.setAttribute("class", "note-text");
-            txt.setAttribute("fill", isActive ? "var(--note-text-active)" : "var(--note-text-ghost)");
-            
-            let labelText = "";
-            if (currentViewMode === 'notes') {
-                labelText = getNoteName(val, intervalLabel);
-            } else if (currentViewMode === 'solfege') {
-                labelText = getSolfegeLabel(val);
-            } else {
-                let rawInterval = getIntervalLabel(val);
-                labelText = CN_INTERVAL_MAP[rawInterval] || rawInterval || "?";
-            }
-            
-            txt.textContent = labelText;
-            g.appendChild(txt);
-        }
-        
-        svg.appendChild(g);
-    }
-
-    // --- VECTOR ZOOM ENGINE ---
-    const zoomContainer = document.getElementById('zoomContainer');
-    const svgElement = document.getElementById('fretboard');
-
-    let viewBox = { x: 0, y: 0, w: BASE_W, h: BASE_H };
-    const MAX_W = BASE_W;
-    const MIN_W = BASE_W / 4; 
-    
-    function setViewBox() {
-        if (viewBox.w > MAX_W) viewBox.w = MAX_W;
-        if (viewBox.w < MIN_W) viewBox.w = MIN_W;
-        if (viewBox.h > BASE_H) viewBox.h = BASE_H;
-        
-        viewBox.h = viewBox.w * (BASE_H / BASE_W);
-
-        if (viewBox.x < 0) viewBox.x = 0;
-        if (viewBox.y < 0) viewBox.y = 0;
-        if (viewBox.x + viewBox.w > BASE_W) viewBox.x = BASE_W - viewBox.w;
-        if (viewBox.y + viewBox.h > BASE_H) viewBox.y = BASE_H - viewBox.h;
-
-        svgElement.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
-    }
-
-    function resetView() {
-        viewBox = { x: 0, y: 0, w: BASE_W, h: BASE_H };
-        setViewBox();
-    }
-
-    let isPanning = false;
-    let startX = 0;
-    let startY = 0;
-    let initialPinchDist = 0;
-    let initialViewBoxW = 0;
-
-    zoomContainer.addEventListener('mousedown', e => {
-        isPanning = true;
-        startX = e.clientX;
-        startY = e.clientY;
-        zoomContainer.style.cursor = 'grabbing';
-    });
-
-    zoomContainer.addEventListener('mousemove', e => {
-        if (!isPanning) return;
-        e.preventDefault();
-        const dx = e.clientX - startX;
-        const dy = e.clientY - startY;
-        
-        const containerW = zoomContainer.clientWidth;
-        const ratio = viewBox.w / containerW;
-
-        viewBox.x -= dx * ratio;
-        viewBox.y -= dy * ratio;
-
-        startX = e.clientX;
-        startY = e.clientY;
-        setViewBox();
-    });
-
-    zoomContainer.addEventListener('mouseup', () => {
-        isPanning = false;
-        zoomContainer.style.cursor = 'grab';
-    });
-    
-    zoomContainer.addEventListener('mouseleave', () => {
-        isPanning = false;
-        zoomContainer.style.cursor = 'grab';
-    });
-
-    zoomContainer.addEventListener('touchstart', e => {
-        if (e.touches.length === 1) {
-            isPanning = true;
-            startX = e.touches[0].clientX;
-            startY = e.touches[0].clientY;
-        } else if (e.touches.length === 2) {
-            isPanning = false;
-            initialPinchDist = Math.hypot(
-                e.touches[0].clientX - e.touches[1].clientX,
-                e.touches[0].clientY - e.touches[1].clientY
-            );
-            initialViewBoxW = viewBox.w;
-        }
-    });
-
-    zoomContainer.addEventListener('touchmove', e => {
-        e.preventDefault(); 
-        
-        if (e.touches.length === 1 && isPanning) {
-            const dx = e.touches[0].clientX - startX;
-            const dy = e.touches[0].clientY - startY;
-            
-            const containerW = zoomContainer.clientWidth;
-            const ratio = viewBox.w / containerW;
-
-            viewBox.x -= dx * ratio;
-            viewBox.y -= dy * ratio;
-            
-            startX = e.touches[0].clientX;
-            startY = e.touches[0].clientY;
-            setViewBox();
-        } else if (e.touches.length === 2) {
-            const dist = Math.hypot(
-                e.touches[0].clientX - e.touches[1].clientX,
-                e.touches[0].clientY - e.touches[1].clientY
-            );
-            
-            const zoomChange = initialPinchDist / dist; 
-            const newW = initialViewBoxW * zoomChange;
-
-            const oldW = viewBox.w;
-            viewBox.w = newW;
-            const diffW = oldW - viewBox.w;
-            viewBox.x += diffW / 2;
-            
-            setViewBox();
-        }
-    });
-
-    zoomContainer.addEventListener('touchend', () => {
-        isPanning = false;
-    });
-
-    zoomContainer.addEventListener('wheel', e => {
-        e.preventDefault();
-        const zoomIntensity = 0.1;
-        const direction = e.deltaY > 0 ? 1 : -1; 
-        
-        const oldW = viewBox.w;
-        let newW = viewBox.w * (1 + direction * zoomIntensity);
-        
-        if (newW < MIN_W) newW = MIN_W;
-        if (newW > MAX_W) newW = MAX_W;
-
-        const rect = zoomContainer.getBoundingClientRect();
-        const offsetX = e.clientX - rect.left; 
-        
-        const ratioW = oldW / rect.width; 
-        const mouseSVGX = viewBox.x + offsetX * ratioW;
-        
-        viewBox.w = newW;
-        
-        const newRatioW = newW / rect.width;
-        viewBox.x = mouseSVGX - offsetX * newRatioW;
-
-        setViewBox();
-    }, { passive: false });
-
-    // --- KEYBOARD NAVIGATION ---
-    document.addEventListener('keydown', (e) => {
-        if (generatedPositions.length === 0) return;
-
-        let currentId = -1;
-        if (activeAnchors.size > 0) {
-            currentId = Array.from(activeAnchors)[0];
-        }
-
-        let currentIndex = generatedPositions.findIndex(p => p.id === currentId);
-        let newIndex = currentIndex;
-
-        if (e.key === 'ArrowLeft') {
-            newIndex = currentIndex - 1;
-            if (newIndex < 0) newIndex = generatedPositions.length - 1;
-        } else if (e.key === 'ArrowRight') {
-            newIndex = currentIndex + 1;
-            if (newIndex >= generatedPositions.length) newIndex = 0;
-        } else {
-            return; 
-        }
-
-        if (newIndex !== currentIndex && newIndex >= 0) {
-            const newPos = generatedPositions[newIndex];
-            activeAnchors.clear();
-            activeAnchors.add(newPos.id);
-            updateApp();
-            scrollToButton(newIndex);
-        }
-    });
-
-    function scrollToButton(index) {
-        const container = document.getElementById('posBtnContainer');
-        const buttons = container.getElementsByClassName('pos-btn');
-        if (buttons[index]) {
-            // center the button
-            buttons[index].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-        }
-    }
-
-    // Init
-    toggleExerciseMode();
-</script>
+    <script src="rhythm_data_1.js"></script>
+    <script src="rhythm_data_2.js"></script>
+    <script src="rhythm_data_3.js"></script>
+    <script src="rhythm_data_4.js"></script>
+    <script src="rhythm_data_5.js"></script>
+    <script src="rhythm_data_6.js"></script>
+    <script src="rhythm_data_7.js"></script>
+    <script src="rhythm_data_8.js"></script>
+
+    <script src="app.js"></script>
 </body>
 </html>
