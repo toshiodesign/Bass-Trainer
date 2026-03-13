@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Bass & Rhythm Mastery</title>
     <style>
-        /* --- 共用 CSS Variables --- */
+        /* --- 整合的共用 CSS Variables (以 Scale Trainer 為基礎) --- */
         :root {
             --bg-body: #121212;
             --bg-app: #1E1E1E;
@@ -36,14 +36,12 @@
             background: var(--bg-body);
             color: var(--text-main);
             margin: 0;
-            /* 底部留出空間給懸浮控制列 */
-            padding: 15px 10px 100px 10px; 
+            padding: 15px 10px;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: flex-start;
             overflow-x: hidden;
-            -webkit-tap-highlight-color: transparent; /* 移除手機點擊閃爍 */
         }
 
         .app-container {
@@ -51,9 +49,10 @@
             max-width: 1400px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 25px; /* 模組之間的間距 */
         }
 
+        /* --- 共用面板樣式 --- */
         .module-panel {
             background: var(--bg-app);
             border-radius: 12px;
@@ -64,7 +63,7 @@
         }
 
         .header-section {
-            padding: 12px 20px;
+            padding: 15px 20px;
             border-bottom: 1px solid var(--fret-line);
             background: var(--bg-app);
         }
@@ -77,43 +76,35 @@
             gap: 10px;
         }
 
-        h1 { margin: 0; font-size: 1.1rem; color: var(--text-main); font-weight: 600; letter-spacing: 0.5px;}
+        h1 { margin: 0; font-size: 1.2rem; color: var(--text-main); font-weight: 600; letter-spacing: 0.5px;}
         
-        .header-actions { display: flex; align-items: center; gap: 10px; }
-
-        /* 摺疊設定區過渡動畫 */
-        .settings-panel {
-            max-height: 500px;
-            opacity: 1;
-            overflow: hidden;
-            transition: all 0.3s ease-in-out;
-            border-bottom: 1px solid var(--fret-line);
-        }
-        .settings-panel.collapsed {
-            max-height: 0;
-            opacity: 0;
-            border-bottom: none;
-            margin: 0; padding-top: 0; padding-bottom: 0;
-        }
-
         select {
-            padding: 8px 12px; font-size: 0.9rem; border: 1px solid var(--btn-border);
-            border-radius: 6px; background-color: var(--bg-body); color: var(--text-main);
-            outline: none; cursor: pointer; flex: 1; min-width: 120px;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            border: 1px solid var(--btn-border);
+            border-radius: 6px;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            outline: none;
+            min-width: 120px;
+            cursor: pointer;
         }
         select:focus { border-color: var(--note-active); }
         select optgroup { background-color: var(--bg-app); color: var(--text-sub); }
 
+
         /* =========================================
            MODULE 1: FRETBOARD TRAINER
         ========================================= */
+        .switches-area { display: flex; gap: 10px; align-items: center; }
+
         .controls-row {
-            display: flex; gap: 8px; flex-wrap: wrap; align-items: center; 
-            padding: 15px 20px; background: rgba(0,0,0,0.2);
+            display: flex; gap: 8px; flex-wrap: wrap; align-items: center; width: 100%; margin-top: 12px;
         }
 
         #exerciseModeSelect, #stringPairSelect, #stringTripletSelect, #stringQuadSelect, #stringQuintSelect, #chordTypeSelect, #arpeggioStringSelect {
-            border-color: var(--note-active); font-weight: bold;
+            border-color: var(--note-active);
+            font-weight: bold;
         }
 
         .toggle-container {
@@ -143,8 +134,8 @@
         .pos-buttons-container::-webkit-scrollbar { display: none; }
 
         .pos-btn {
-            white-space: nowrap; padding: 8px 16px; border: 1px solid var(--btn-border);
-            background: var(--btn-bg); color: var(--text-sub); border-radius: 20px;
+            white-space: nowrap; padding: 6px 14px; border: 1px solid var(--btn-border);
+            background: var(--btn-bg); color: var(--text-sub); border-radius: 15px;
             cursor: pointer; font-size: 0.85rem; transition: 0.2s;
             display: flex; flex-direction: column; align-items: center; min-width: 80px;
         }
@@ -155,7 +146,7 @@
         }
 
         .fretboard-wrapper {
-            width: 100%; height: 40vh; min-height: 250px; background: var(--bg-app);
+            width: 100%; height: 50vh; min-height: 250px; background: var(--bg-app);
             position: relative; overflow: hidden; touch-action: none; cursor: grab;
         }
         .fretboard-wrapper:active { cursor: grabbing; }
@@ -172,7 +163,7 @@
 
         .reset-zoom-btn {
             position: absolute; bottom: 50px; right: 20px; background: rgba(0,0,0,0.6);
-            color: white; border: 1px solid var(--btn-border); padding: 8px 16px;
+            color: white; border: 1px solid var(--btn-border); padding: 6px 12px;
             border-radius: 6px; font-size: 0.8rem; cursor: pointer; z-index: 20; transition: 0.2s;
         }
         .reset-zoom-btn:hover { background: var(--note-active); border-color: var(--note-active); }
@@ -184,25 +175,29 @@
         ========================================= */
         .rhythm-controls-top {
             display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-around;
-            padding: 15px 20px; background: rgba(0,0,0,0.2);
+            padding: 15px 20px; border-bottom: 1px solid var(--fret-line);
+            background: var(--bg-app);
         }
 
-        .rc-group { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; min-width: 100px; }
+        .rc-group { display: flex; flex-direction: column; align-items: center; gap: 8px; }
         .rc-label { font-size: 0.8rem; color: var(--text-sub); font-weight: normal; }
         .val-display { font-size: 0.9rem; font-weight: bold; color: var(--note-active); }
 
-        input[type="range"] { -webkit-appearance: none; width: 100%; max-width: 120px; background: transparent; height: 20px; }
+        /* 滑桿統一化 */
+        input[type="range"] { -webkit-appearance: none; width: 100px; background: transparent; height: 20px; }
         input[type="range"]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: var(--btn-border); border-radius: 2px;}
         input[type="range"]::-webkit-slider-thumb { 
-            -webkit-appearance: none; height: 18px; width: 18px; 
-            border-radius: 50%; background: var(--note-active); margin-top: -7px; cursor: pointer; 
+            -webkit-appearance: none; height: 16px; width: 16px; 
+            border-radius: 50%; background: var(--note-active); margin-top: -6px; cursor: pointer; 
         }
 
+        /* 舞台區 (底色加深創造空間感) */
         .rhythm-stage {
             display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; align-items: center;
             background: var(--bg-body); padding: 30px 20px; min-height: 140px;
         }
 
+        /* 節奏卡片 */
         .beat-card {
             border: 2px solid var(--btn-border); border-radius: 8px; width: 100px; height: 100px;
             display: flex; justify-content: center; align-items: center; transition: 0.15s ease;
@@ -219,38 +214,14 @@
         .beat-card.active .svg-container { opacity: 1; }
         .beat-card svg { width: 100%; height: 100%; fill: var(--text-main); }
 
-        .library-panel { background: var(--bg-app); padding: 20px; border-top: 1px solid var(--fret-line); }
-        .library-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .library-title { font-size: 1rem; font-weight: bold; color: var(--text-main); }
-        
-        .pattern-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(65px, 1fr)); gap: 10px; max-height: 400px; overflow-y: auto; transition: 0.3s; }
-        .pattern-grid.collapsed { max-height: 0; opacity: 0; margin: 0; overflow: hidden; }
-        
-        .pattern-item {
-            aspect-ratio: 1; border: 1px solid var(--btn-border); background: var(--btn-bg); border-radius: 6px;
-            cursor: pointer; display: flex; justify-content: center; align-items: center; padding: 6px; opacity: 0.5; transition: 0.2s;
-        }
-        .pattern-item:hover { border-color: var(--text-sub); opacity: 0.8; }
-        .pattern-item.selected { border-color: var(--note-active); opacity: 1; background: rgba(52, 152, 219, 0.15); box-shadow: 0 0 8px rgba(52, 152, 219, 0.3);}
-        .pattern-item svg { width: 100%; height: 100%; pointer-events: none; fill: var(--text-main); }
-
-        /* =========================================
-           ✨ 懸浮控制列 (Sticky Bottom Bar)
-        ========================================= */
-        .fixed-bottom-bar {
-            position: fixed; bottom: 0; left: 0; width: 100%;
-            background: rgba(30, 30, 30, 0.85); /* 毛玻璃效果 */
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-top: 1px solid var(--btn-border);
-            display: flex; align-items: center; justify-content: center; gap: 20px;
-            padding: 15px 10px; z-index: 100;
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
-            padding-bottom: max(15px, env(safe-area-inset-bottom)); /* 適配 iPhone 底部橫條 */
+        /* 播放控制列 */
+        .playback-bar {
+            display: flex; align-items: center; justify-content: center; gap: 30px;
+            background: var(--bg-app); padding: 15px; border-top: 1px solid var(--fret-line); border-bottom: 1px solid var(--fret-line);
         }
 
         .btn-circle {
-            width: 60px; height: 60px; border-radius: 50%; background: var(--btn-bg);
+            width: 55px; height: 55px; border-radius: 50%; background: var(--btn-bg);
             border: 2px solid var(--btn-border); color: var(--text-main);
             cursor: pointer; display: flex; justify-content: center; align-items: center; transition: 0.2s;
         }
@@ -261,37 +232,33 @@
         }
 
         .btn-pill {
-            padding: 12px 24px; border-radius: 30px; border: 1px solid var(--btn-border);
-            background: var(--btn-bg); color: var(--text-sub); font-size: 0.9rem; font-weight: bold;
-            cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px;
+            padding: 10px 24px; border-radius: 25px; border: 1px solid var(--btn-border);
+            background: var(--btn-bg); color: var(--text-sub); font-size: 0.85rem; font-weight: bold;
+            cursor: pointer; transition: 0.2s; 
         }
         .btn-pill:hover { border-color: var(--note-active); color: var(--text-main); }
         .btn-pill.active {
             background: var(--btn-active-bg); color: var(--btn-active-text); border-color: var(--btn-active-bg);
         }
 
-        .icon-btn { 
-            padding: 6px 12px; font-size: 1rem; border-radius: 6px; border: 1px solid var(--btn-border); 
-            background: var(--btn-bg); color: var(--text-main); cursor: pointer; transition: 0.2s;
+        /* 節奏圖庫面板 */
+        .library-panel { background: var(--bg-app); padding: 20px; }
+        .library-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .library-title { font-size: 1rem; font-weight: bold; color: var(--text-main); }
+        
+        .pattern-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 12px; max-height: 500px; overflow-y: auto; transition: 0.3s; }
+        .pattern-grid.collapsed { max-height: 0; opacity: 0; margin: 0; overflow: hidden; }
+        
+        .pattern-item {
+            aspect-ratio: 1; border: 1px solid var(--btn-border); background: var(--btn-bg); border-radius: 6px;
+            cursor: pointer; display: flex; justify-content: center; align-items: center; padding: 6px; opacity: 0.5; transition: 0.2s;
         }
-        .icon-btn:hover { background: var(--btn-border); }
-        .icon-btn.active { background: var(--note-active); border-color: var(--note-active); color: white; }
+        .pattern-item:hover { border-color: var(--text-sub); opacity: 0.8; }
+        .pattern-item.selected { border-color: var(--note-active); opacity: 1; background: rgba(52, 152, 219, 0.15); box-shadow: 0 0 8px rgba(52, 152, 219, 0.3);}
+        .pattern-item svg { width: 100%; height: 100%; pointer-events: none; fill: var(--text-main); }
 
         .btn-sm { padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; border: 1px solid var(--btn-border); background: var(--btn-bg); color: var(--text-main); cursor: pointer; font-weight: bold; transition: 0.2s;}
         .btn-sm:hover { background: var(--note-active); border-color: var(--note-active); color: var(--btn-active-text);}
-
-        /* =========================================
-           📱 橫豎屏自適應 (Media Queries)
-        ========================================= */
-        @media screen and (orientation: landscape) and (max-height: 600px) {
-            body { padding-top: 5px; }
-            .header-section { display: none; } /* 橫向時隱藏標題，最大化空間 */
-            .legend { display: none; }         /* 隱藏圖例 */
-            .fretboard-wrapper { height: 60vh; }
-            .rhythm-stage { min-height: 100px; padding: 15px; }
-            .beat-card { width: 80px; height: 80px; }
-        }
-
     </style>
     <script>window.ALL_PATTERNS = [];</script>
 </head>
@@ -302,19 +269,16 @@
         <div class="module-panel">
             <div class="header-section">
                 <div class="header-top">
-                    <h1>Bass Fretboard</h1>
-                    <div class="header-actions">
+                    <h1>Bass Fretboard Trainer</h1>
+                    <div class="switches-area">
                         <label class="toggle-container">
                             <input type="checkbox" id="multiModeCheck">
                             <div class="toggle-switch"></div>
-                            <span>Multi</span>
+                            <span>Multi Select</span>
                         </label>
-                        <button class="icon-btn" id="toggleFretSettingsBtn">⚙️</button>
                     </div>
                 </div>
-            </div>
-            
-            <div class="settings-panel collapsed" id="fretSettings">
+                
                 <div class="controls-row">
                     <select id="exerciseModeSelect">
                         <option value="scale">模式: 全指板音階</option>
@@ -324,6 +288,7 @@
                         <option value="quad_drill">模式: 四弦模進</option>
                         <option value="quint_drill">模式: 五弦模進</option>
                     </select>
+
                     <select id="keySelect">
                         <option value="0">Key: C</option>
                         <option value="1">Key: Db</option>
@@ -338,6 +303,7 @@
                         <option value="10">Key: Bb</option>
                         <option value="11">Key: B</option>
                     </select>
+
                     <select id="scaleSelect" class="hidden">
                         <optgroup label="Basic Scales">
                             <option value="major">Major (Ionian)</option>
@@ -346,19 +312,54 @@
                             <option value="min_pent">Minor Pentatonic</option>
                         </optgroup>
                     </select>
+                    
                     <select id="chordTypeSelect" class="hidden">
-                        <optgroup label="三和弦"><option value="maj">Major</option><option value="min">Minor</option><option value="dim">Diminished</option><option value="aug">Augmented</option></optgroup>
-                        <optgroup label="七和弦"><option value="maj7">Maj7</option><option value="dom7">Dom 7</option><option value="min7">m7</option><option value="m7b5">m7b5</option><option value="dim7">dim7</option><option value="mM7">mM7</option></optgroup>
+                        <optgroup label="三和弦">
+                            <option value="maj">Major</option>
+                            <option value="min">Minor</option>
+                            <option value="dim">Diminished</option>
+                            <option value="aug">Augmented</option>
+                        </optgroup>
+                        <optgroup label="七和弦">
+                            <option value="maj7">Maj7</option>
+                            <option value="dom7">Dom 7</option>
+                            <option value="min7">m7</option>
+                            <option value="m7b5">m7b5</option>
+                            <option value="dim7">dim7</option>
+                            <option value="mM7">mM7</option>
+                        </optgroup>
                     </select>
+
                     <select id="arpeggioStringSelect" class="hidden">
-                        <option value="4">起始弦: B String</option><option value="3" selected>起始弦: E String</option><option value="2">起始弦: A String</option><option value="1">起始弦: D String</option>
+                        <option value="4">起始弦: B String</option>
+                        <option value="3" selected>起始弦: E String</option>
+                        <option value="2">起始弦: A String</option>
+                        <option value="1">起始弦: D String</option>
                     </select>
-                    <select id="stringPairSelect" class="hidden"><option value="0,1">D & G (High)</option><option value="1,2">A & D (Mid)</option><option value="2,3">E & A (Mid-Low)</option><option value="3,4">B & E (Low)</option></select>
-                    <select id="stringTripletSelect" class="hidden"><option value="0,1,2">A-D-G (High)</option><option value="1,2,3">E-A-D (Std)</option><option value="2,3,4" selected>B-E-A (Low)</option></select>
-                    <select id="stringQuadSelect" class="hidden"><option value="0,1,2,3">E-A-D-G (Std 4)</option><option value="1,2,3,4" selected>B-E-A-D (Low 4)</option></select>
-                    <select id="stringQuintSelect" class="hidden"><option value="0,1,2,3,4" selected>B-E-A-D-G (Full 5)</option></select>
+
+                    <select id="stringPairSelect" class="hidden">
+                        <option value="0,1">D & G (High)</option>
+                        <option value="1,2">A & D (Mid)</option>
+                        <option value="2,3">E & A (Mid-Low)</option>
+                        <option value="3,4">B & E (Low)</option>
+                    </select>
+                    <select id="stringTripletSelect" class="hidden">
+                        <option value="0,1,2">A-D-G (High)</option>
+                        <option value="1,2,3">E-A-D (Std)</option>
+                        <option value="2,3,4" selected>B-E-A (Low)</option>
+                    </select>
+                    <select id="stringQuadSelect" class="hidden">
+                        <option value="0,1,2,3">E-A-D-G (Std 4)</option>
+                        <option value="1,2,3,4" selected>B-E-A-D (Low 4)</option>
+                    </select>
+                    <select id="stringQuintSelect" class="hidden">
+                        <option value="0,1,2,3,4" selected>B-E-A-D-G (Full 5)</option>
+                    </select>
+
                     <select id="viewModeSelect">
-                        <option value="notes">顯示: 音名</option><option value="solfege">顯示: 唱名</option><option value="intervals" selected>顯示: 級數</option>
+                        <option value="notes">顯示: 音名</option>
+                        <option value="solfege">顯示: 唱名</option>
+                        <option value="intervals" selected>顯示: 級數</option>
                     </select>
                 </div>
             </div>
@@ -381,38 +382,55 @@
             <div class="header-section">
                 <div class="header-top">
                     <h1>Rhythm Generator</h1>
-                    <button class="icon-btn" id="toggleRhythmSettingsBtn">⚙️</button>
                 </div>
             </div>
-            
-            <div class="settings-panel collapsed" id="rhythmSettings">
-                <div class="rhythm-controls-top">
-                    <div class="rc-group">
-                        <span class="rc-label">Meter</span>
-                        <select id="timeSigSelect">
-                            <option value="4/4" selected>4/4 SIMPLE</option><option value="2/4">2/4 SIMPLE</option><option value="3/4">3/4 SIMPLE</option><option value="5/4">5/4 SIMPLE</option><option disabled>──────────</option><option value="6/8">6/8 COMPOUND</option><option value="9/8">9/8 COMPOUND</option><option value="12/8">12/8 COMPOUND</option>
-                        </select>
-                    </div>
-                    <div class="rc-group">
-                        <span class="rc-label">Tempo (<span id="bpmDisplay">100</span>)</span>
-                        <input type="range" id="bpmSlider" min="40" max="200" value="100">
-                    </div>
-                    <div class="rc-group">
-                        <span class="rc-label">Kick Vol</span>
-                        <input type="range" id="kickVolSlider" min="0" max="100" value="80">
-                    </div>
-                    <div class="rc-group">
-                        <span class="rc-label">Clap Vol</span>
-                        <input type="range" id="clapVolSlider" min="0" max="100" value="80">
-                    </div>
-                    <div class="rc-group">
-                        <span class="rc-label">Chaos (<span id="shuffleDisplay">0%</span>)</span>
-                        <input type="range" id="shuffleSlider" min="0" max="100" value="0">
-                    </div>
+            <div class="rhythm-controls-top">
+                <div class="rc-group">
+                    <span class="rc-label">Meter</span>
+                    <select id="timeSigSelect">
+                        <option value="4/4" selected>4/4 SIMPLE</option>
+                        <option value="2/4">2/4 SIMPLE</option>
+                        <option value="3/4">3/4 SIMPLE</option>
+                        <option value="5/4">5/4 SIMPLE</option>
+                        <option disabled>──────────</option>
+                        <option value="6/8">6/8 COMPOUND</option>
+                        <option value="9/8">9/8 COMPOUND</option>
+                        <option value="12/8">12/8 COMPOUND</option>
+                    </select>
+                </div>
+                
+                <div class="rc-group">
+                    <span class="rc-label">Tempo</span>
+                    <span id="bpmDisplay" class="val-display">100</span>
+                    <input type="range" id="bpmSlider" min="40" max="200" value="100">
+                </div>
+                
+                <div class="rc-group">
+                    <span class="rc-label">Kick Vol</span>
+                    <input type="range" id="kickVolSlider" min="0" max="100" value="80">
+                </div>
+                
+                <div class="rc-group">
+                    <span class="rc-label">Clap Vol</span>
+                    <input type="range" id="clapVolSlider" min="0" max="100" value="80">
+                </div>
+
+                <div class="rc-group">
+                    <span class="rc-label">Chaos</span>
+                    <span id="shuffleDisplay" class="val-display">0%</span>
+                    <input type="range" id="shuffleSlider" min="0" max="100" value="0">
                 </div>
             </div>
 
             <div class="rhythm-stage" id="displayArea"></div>
+
+            <div class="playback-bar">
+                <button class="btn-pill" id="randomRhythmBtn">⟳ Randomize</button>
+                <button class="btn-circle" id="playBtn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                </button>
+                <button class="btn-pill active" id="kickBtn">● Kick</button>
+            </div>
 
             <div class="library-panel">
                 <div class="library-header">
@@ -429,20 +447,6 @@
             </div>
         </div>
 
-    </div>
-
-    <div class="fixed-bottom-bar">
-        <button class="btn-pill" id="randomRhythmBtn">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
-            重骰
-        </button>
-        <button class="btn-circle" id="playBtn">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-        </button>
-        <button class="btn-pill active" id="kickBtn">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8"/></svg>
-            大鼓
-        </button>
     </div>
 
     <script src="rhythm_data_1.js"></script>

@@ -660,18 +660,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         if (isPlaying) timerID = requestAnimationFrame(scheduler);
     }
-// --- UI Toggle Event Listeners (手機版設定面板展開/收合) ---
-    document.getElementById('toggleFretSettingsBtn').addEventListener('click', (e) => {
-        const panel = document.getElementById('fretSettings');
-        panel.classList.toggle('collapsed');
-        e.currentTarget.classList.toggle('active');
-    });
 
-    document.getElementById('toggleRhythmSettingsBtn').addEventListener('click', (e) => {
-        const panel = document.getElementById('rhythmSettings');
-        panel.classList.toggle('collapsed');
-        e.currentTarget.classList.toggle('active');
-    });
     // Rhythm Event Listeners
     document.getElementById('timeSigSelect').addEventListener('change', syncRhythmUI);
     document.getElementById('bpmSlider').addEventListener('input', e => { bpm = parseInt(e.target.value); document.getElementById('bpmDisplay').innerText = bpm; });
