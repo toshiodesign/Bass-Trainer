@@ -1,17 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-    // --- ✨ 全域防護：防止手機瀏覽器原生雙指放大整個網頁 ---
-    document.addEventListener('touchmove', function(event) {
-        if (event.touches.length > 1) {
-            event.preventDefault();
-        }
-    }, { passive: false });
-
-    // 觸覺回饋工具函數
-    function triggerHaptic(duration = 15) {
-        if (navigator.vibrate) navigator.vibrate(duration);
-    }
-
     /* =========================================================
        MODULE 1: BASS FRETBOARD LOGIC
     ========================================================= */
@@ -103,6 +91,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let generatedPositions = []; 
     let isFretboardMultiMode = false;
 
+    // Fretboard Selectors
     const exModeSel = document.getElementById('exerciseModeSelect');
     const keySel = document.getElementById('keySelect');
     const scaleSel = document.getElementById('scaleSelect');
@@ -308,7 +297,6 @@ document.addEventListener("DOMContentLoaded", () => {
             let label = (exerciseMode === 'scale') ? ((pos.id === 0) ? "Open" : `Pos ${idx + 1}`) : pos.label;
             btn.innerHTML = `${label}<span class="mode-name">${pos.modeName || pos.subLabel}</span>`;
             btn.onclick = () => {
-                triggerHaptic(10);
                 if (isFretboardMultiMode) {
                     if (activeAnchors.has(pos.id)) activeAnchors.delete(pos.id);
                     else activeAnchors.add(pos.id);
@@ -441,7 +429,7 @@ document.addEventListener("DOMContentLoaded", () => {
         svg.appendChild(g);
     }
 
-    // --- ✨ 觸控手勢、縮放與滑動判定引擎 ---
+    // SVG Zoom Engine
     const zoomContainer = document.getElementById('zoomContainer');
     const svgElement = document.getElementById('fretboard');
     let viewBox = { x: 0, y: 0, w: BASE_W, h: BASE_H };
@@ -458,106 +446,17 @@ document.addEventListener("DOMContentLoaded", () => {
         svgElement.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
     }
 
-    function resetView() {
-        viewBox = { x: 0, y: 0, w: BASE_W, h: BASE_H }; setViewBox();
-        triggerHaptic(30);
-    }
+    let isPanning = false, startX = 0, startY = 0, initialPinchDist = 0, initialViewBoxW = 0;
 
-    let isPanning = false, startX = 0, startY = 0;
-    let touchStartX = 0, touchStartY = 0, touchStartTime = 0, lastTapTime = 0;
-    let initialPinchDist = 0, initialViewBoxW = 0; // 用於雙指縮放
-
-    // 滑鼠與觸控事件
-    zoomContainer.addEventListener('mousedown', e => { 
-        isPanning = true; startX = e.clientX; startY = e.clientY; zoomContainer.style.cursor = 'grabbing'; 
-    });
-    
-    zoomContainer.addEventListener('touchstart', e => { 
-        if (e.touches.length === 1) {
-            isPanning = true;
-            touchStartX = e.touches[0].clientX;
-            touchStartY = e.touches[0].clientY;
-            startX = touchStartX;
-            startY = touchStartY;
-            touchStartTime = Date.now();
-
-            // 雙擊判定 (Double Tap to Reset Zoom)
-            const currentTime = Date.now();
-            const tapLength = currentTime - lastTapTime;
-            if (tapLength < 300 && tapLength > 0) {
-                resetView();
-                e.preventDefault(); 
-            }
-            lastTapTime = currentTime;
-        } else if (e.touches.length === 2) {
-            // ✨ 恢復雙指縮放初始化
-            isPanning = false;
-            initialPinchDist = Math.hypot(
-                e.touches[0].clientX - e.touches[1].clientX,
-                e.touches[0].clientY - e.touches[1].clientY
-            );
-            initialViewBoxW = viewBox.w;
-        }
-    }, { passive: false });
-
+    zoomContainer.addEventListener('mousedown', e => { isPanning = true; startX = e.clientX; startY = e.clientY; zoomContainer.style.cursor = 'grabbing'; });
     zoomContainer.addEventListener('mousemove', e => {
         if (!isPanning) return; e.preventDefault();
         const ratio = viewBox.w / zoomContainer.clientWidth;
         viewBox.x -= (e.clientX - startX) * ratio; viewBox.y -= (e.clientY - startY) * ratio;
         startX = e.clientX; startY = e.clientY; setViewBox();
     });
-
-    zoomContainer.addEventListener('touchmove', e => {
-        if (e.touches.length === 1 && isPanning) {
-            // 只有當移動距離足夠大才判定為平移 (避免跟 Swipe 衝突)
-            const currentX = e.touches[0].clientX;
-            const currentY = e.touches[0].clientY;
-            if (Math.abs(currentX - touchStartX) > 10 || Math.abs(currentY - touchStartY) > 10) {
-                e.preventDefault(); // 防止畫面滾動
-                const ratio = viewBox.w / zoomContainer.clientWidth;
-                viewBox.x -= (currentX - startX) * ratio; viewBox.y -= (currentY - startY) * ratio;
-                startX = currentX; startY = currentY; setViewBox();
-            }
-        } else if (e.touches.length === 2) {
-            // ✨ 恢復雙指縮放邏輯
-            e.preventDefault(); // 阻止瀏覽器原生縮放
-            const dist = Math.hypot(
-                e.touches[0].clientX - e.touches[1].clientX,
-                e.touches[0].clientY - e.touches[1].clientY
-            );
-            const zoomChange = initialPinchDist / dist; 
-            let newW = initialViewBoxW * zoomChange;
-
-            if (newW < MIN_W) newW = MIN_W;
-            if (newW > MAX_W) newW = MAX_W;
-
-            const oldW = viewBox.w;
-            viewBox.w = newW;
-            viewBox.x += (oldW - newW) / 2; // 置中縮放
-            
-            setViewBox();
-        }
-    }, { passive: false });
-
     zoomContainer.addEventListener('mouseup', () => { isPanning = false; zoomContainer.style.cursor = 'grab'; });
     zoomContainer.addEventListener('mouseleave', () => { isPanning = false; zoomContainer.style.cursor = 'grab'; });
-    
-    zoomContainer.addEventListener('touchend', e => { 
-        isPanning = false; 
-        if (e.changedTouches.length === 1) {
-            const touchEndX = e.changedTouches[0].clientX;
-            const touchEndY = e.changedTouches[0].clientY;
-            const deltaX = touchEndX - touchStartX;
-            const deltaY = touchEndY - touchStartY;
-            const deltaTime = Date.now() - touchStartTime;
-
-            // 滑動判定 (Swipe to Navigate Positions) - 快速且水平移動
-            if (deltaTime < 300 && Math.abs(deltaX) > 40 && Math.abs(deltaY) < 60) {
-                if (deltaX < 0) navigatePosition(1); // 向左滑 -> 下一個把位
-                else navigatePosition(-1);           // 向右滑 -> 上一個把位
-            }
-        }
-    });
 
     zoomContainer.addEventListener('wheel', e => {
         e.preventDefault();
@@ -569,33 +468,10 @@ document.addEventListener("DOMContentLoaded", () => {
         setViewBox();
     }, { passive: false });
 
-    // 統一的把位導航函數 (給滑動與鍵盤共用)
-    function navigatePosition(direction) {
-        if (generatedPositions.length === 0) return;
-        let currentId = activeAnchors.size > 0 ? Array.from(activeAnchors)[0] : generatedPositions[0].id;
-        let currentIndex = generatedPositions.findIndex(p => p.id === currentId);
-        if (currentIndex === -1) currentIndex = 0;
-
-        let newIndex = currentIndex + direction;
-        if (newIndex < 0) newIndex = generatedPositions.length - 1;
-        if (newIndex >= generatedPositions.length) newIndex = 0;
-
-        activeAnchors.clear();
-        activeAnchors.add(generatedPositions[newIndex].id);
-        renderFretboard();
-        triggerHaptic(15);
-        
-        // 自動捲動按鈕列
-        const btns = document.querySelectorAll('.pos-btn');
-        if(btns[newIndex]) btns[newIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-    }
-
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowLeft') navigatePosition(-1);
-        else if (e.key === 'ArrowRight') navigatePosition(1);
+    document.getElementById('resetZoomBtn').addEventListener('click', () => {
+        viewBox = { x: 0, y: 0, w: BASE_W, h: BASE_H }; setViewBox();
     });
 
-    // Fretboard Settings Event Listeners
     exModeSel.addEventListener('change', syncFretboardState);
     [keySel, scaleSel, chordSel, arpStrSel, strPairSel, strTriSel, strQuadSel, strQuinSel].forEach(el => el.addEventListener('change', syncFretboardState));
     viewModeSel.addEventListener('change', renderFretboard);
@@ -607,22 +483,12 @@ document.addEventListener("DOMContentLoaded", () => {
         renderFretboard();
     });
 
-    // UI 折疊面板
-    document.getElementById('toggleFretSettingsBtn').addEventListener('click', (e) => {
-        document.getElementById('fretSettings').classList.toggle('collapsed');
-        e.currentTarget.classList.toggle('active'); triggerHaptic(10);
-    });
-
-    document.getElementById('toggleRhythmSettingsBtn').addEventListener('click', (e) => {
-        document.getElementById('rhythmSettings').classList.toggle('collapsed');
-        e.currentTarget.classList.toggle('active'); triggerHaptic(10);
-    });
-
 
     /* =========================================================
-       MODULE 2: RHYTHM GENERATOR LOGIC
+       MODULE 2: RHYTHM GENERATOR LOGIC (1 Beat = 1 Card)
     ========================================================= */
 
+    // 加入您指定的 四分與八分音符/休止 變化
     const BASIC_PATTERNS = [
         { id: 'custom_q', type: 'simple', name: '四分音符', events: [0], svg: `<svg viewBox="0 0 200 130"><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-size="85" fill="currentColor">♩</text></svg>` },
         { id: 'custom_qr', type: 'simple', name: '四分休止符', events: [], svg: `<svg viewBox="0 0 200 130"><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-size="85" fill="currentColor">𝄽</text></svg>` },
@@ -632,7 +498,12 @@ document.addEventListener("DOMContentLoaded", () => {
     ];
 
     if (!window.ALL_PATTERNS) window.ALL_PATTERNS = [];
-    BASIC_PATTERNS.forEach(bp => { if (!window.ALL_PATTERNS.find(p => p.id === bp.id)) window.ALL_PATTERNS.unshift(bp); });
+    // 安全地將這些基礎節奏插入到庫的最前方
+    BASIC_PATTERNS.forEach(bp => {
+        if (!window.ALL_PATTERNS.find(p => p.id === bp.id)) {
+            window.ALL_PATTERNS.unshift(bp);
+        }
+    });
 
     let audioCtx;
     let isPlaying = false;
@@ -658,8 +529,11 @@ document.addEventListener("DOMContentLoaded", () => {
     function syncRhythmUI() {
         const val = document.getElementById('timeSigSelect').value;
         const [num, den] = val.split('/').map(Number);
-        if (den === 8 && num % 3 === 0) { currentMeterMode = 'compound'; beatsPerBar = num / 3; } 
-        else { currentMeterMode = 'simple'; beatsPerBar = num; }
+        if (den === 8 && num % 3 === 0) {
+            currentMeterMode = 'compound'; beatsPerBar = num / 3;
+        } else {
+            currentMeterMode = 'simple'; beatsPerBar = num;
+        }
         libTitle.innerText = `Library (${val})`;
         renderLibrary();
         generateRhythm();
@@ -676,7 +550,6 @@ document.addEventListener("DOMContentLoaded", () => {
             div.className = 'pattern-item selected';
             div.innerHTML = p.svg; div.title = p.name;
             div.onclick = () => {
-                triggerHaptic(10);
                 div.classList.toggle('selected');
                 if (activePatternIDs.includes(p.id)) activePatternIDs = activePatternIDs.filter(id => id !== p.id);
                 else activePatternIDs.push(p.id);
@@ -698,22 +571,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 const card = document.createElement('div');
                 card.className = 'beat-card';
                 card.innerHTML = `<div class="svg-container">${patternObj.svg}</div>`;
-                
-                // ✨ 單卡點擊重骰邏輯 ✨
-                card.addEventListener('click', () => {
-                    if (activePatternIDs.length === 0) return;
-                    const newRandId = activePatternIDs[Math.floor(Math.random() * activePatternIDs.length)];
-                    const newPattern = window.ALL_PATTERNS.find(p => p.id === newRandId);
-                    if (newPattern) {
-                        currentMeasure[i] = newPattern; 
-                        card.innerHTML = `<div class="svg-container">${newPattern.svg}</div>`;
-                        card.classList.remove('changing');
-                        void card.offsetWidth; // Trigger reflow for animation
-                        card.classList.add('changing');
-                        triggerHaptic(20); // 更強的觸覺回饋
-                    }
-                });
-
                 displayArea.appendChild(card);
             }
         }
@@ -754,6 +611,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const currentIdx = currentBeatIndex;
             const visualDelay = (nextBeatTime - audioCtx.currentTime) * 1000;
             
+            // UI 視覺亮燈排程
             setTimeout(() => {
                 const cards = document.querySelectorAll('.beat-card');
                 cards.forEach((c, i) => {
@@ -762,8 +620,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
             }, Math.max(0, visualDelay));
 
+            // 每拍固定打一下 Kick
             if (kickEnabled) playSound(nextBeatTime, 'kick');
 
+            // 排程 Clap：相對發聲位置
             const pattern = currentMeasure[currentBeatIndex];
             if (pattern && pattern.events) {
                 pattern.events.forEach(ratio => {
@@ -777,6 +637,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (currentBeatIndex >= beatsPerBar) {
                 currentBeatIndex = 0;
                 
+                // Chaos 機制：小節結束時判斷是否隨機替換音符
                 if (shuffleProb > 0 && activePatternIDs.length > 0) {
                     setTimeout(() => {
                         for (let i = 0; i < beatsPerBar; i++) {
@@ -793,7 +654,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                 }
                             }
                         }
-                    }, Math.max(0, visualDelay + beatDuration * 800)); 
+                    }, Math.max(0, visualDelay + beatDuration * 800)); // 在最後一拍快結束時更新 UI
                 }
             }
         }
@@ -807,16 +668,10 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('clapVolSlider').addEventListener('input', e => { clapVolume = parseInt(e.target.value) / 100; });
     document.getElementById('shuffleSlider').addEventListener('input', e => { shuffleProb = parseInt(e.target.value); document.getElementById('shuffleDisplay').innerText = shuffleProb + "%"; });
 
-    document.getElementById('kickBtn').addEventListener('click', e => { 
-        kickEnabled = !kickEnabled; e.currentTarget.classList.toggle('active'); triggerHaptic(15); 
-    });
-    
-    document.getElementById('randomRhythmBtn').addEventListener('click', () => { 
-        generateRhythm(); triggerHaptic(20); 
-    });
+    document.getElementById('kickBtn').addEventListener('click', e => { kickEnabled = !kickEnabled; e.currentTarget.classList.toggle('active'); });
+    document.getElementById('randomRhythmBtn').addEventListener('click', generateRhythm);
     
     playBtn.addEventListener('click', e => {
-        triggerHaptic(30);
         if (isPlaying) {
             isPlaying = false;
             playBtn.classList.remove('playing');
@@ -835,19 +690,16 @@ document.addEventListener("DOMContentLoaded", () => {
         const grid = document.getElementById('libraryGrid');
         grid.classList.toggle('collapsed');
         document.getElementById('toggleLibBtn').innerText = grid.classList.contains('collapsed') ? '▶' : '▼';
-        triggerHaptic(10);
     });
 
     document.getElementById('selectAllBtn').addEventListener('click', () => {
         activePatternIDs = window.ALL_PATTERNS.filter(p => p.type === currentMeterMode).map(p => p.id);
         document.querySelectorAll('.pattern-item').forEach(el => el.classList.add('selected'));
-        triggerHaptic(10);
     });
     
     document.getElementById('deselectAllBtn').addEventListener('click', () => {
         activePatternIDs = [];
         document.querySelectorAll('.pattern-item').forEach(el => el.classList.remove('selected'));
-        triggerHaptic(10);
     });
 
     /* =========================================================
