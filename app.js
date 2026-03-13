@@ -447,7 +447,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     let isPanning = false, startX = 0, startY = 0, initialPinchDist = 0, initialViewBoxW = 0;
+    let lastTapTime = 0;
 
+    // 電腦版滑鼠事件
     zoomContainer.addEventListener('mousedown', e => { isPanning = true; startX = e.clientX; startY = e.clientY; zoomContainer.style.cursor = 'grabbing'; });
     zoomContainer.addEventListener('mousemove', e => {
         if (!isPanning) return; e.preventDefault();
@@ -471,6 +473,92 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('resetZoomBtn').addEventListener('click', () => {
         viewBox = { x: 0, y: 0, w: BASE_W, h: BASE_H }; setViewBox();
     });
+
+    /* =========================================================
+       新增：手機版 Touch 縮放與平移邏輯
+    ========================================================= */
+    function getTouchDistance(touches) {
+        return Math.hypot(touches[0].clientX - touches[1].clientX, touches[0].clientY - touches[1].clientY);
+    }
+
+    zoomContainer.addEventListener('touchstart', e => {
+        if (e.touches.length === 1) {
+            isPanning = true;
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+
+            // 雙擊指板快速還原大小
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - lastTapTime;
+            if (tapLength < 300 && tapLength > 0) {
+                viewBox = { x: 0, y: 0, w: BASE_W, h: BASE_H };
+                setViewBox();
+                e.preventDefault();
+            }
+            lastTapTime = currentTime;
+
+        } else if (e.touches.length === 2) {
+            isPanning = false;
+            initialPinchDist = getTouchDistance(e.touches);
+            initialViewBoxW = viewBox.w;
+        }
+    }, { passive: false });
+
+    zoomContainer.addEventListener('touchmove', e => {
+        e.preventDefault(); // 阻止瀏覽器預設的滾動與縮放，將控制權留在指板內
+        
+        if (e.touches.length === 1 && isPanning) {
+            // 單指平移
+            const ratio = viewBox.w / zoomContainer.clientWidth;
+            viewBox.x -= (e.touches[0].clientX - startX) * ratio;
+            viewBox.y -= (e.touches[0].clientY - startY) * ratio;
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            setViewBox();
+            
+        } else if (e.touches.length === 2) {
+            // 雙指縮放 (Pinch to Zoom)
+            const currentDist = getTouchDistance(e.touches);
+            if (initialPinchDist > 0) {
+                const scale = initialPinchDist / currentDist;
+                const oldW = viewBox.w;
+                
+                viewBox.w = initialViewBoxW * scale;
+                
+                if (viewBox.w < MIN_W) viewBox.w = MIN_W;
+                if (viewBox.w > MAX_W) viewBox.w = MAX_W;
+                
+                // 讓縮放盡量保持在畫面中央
+                viewBox.x += (oldW - viewBox.w) / 2;
+                viewBox.y += (oldW * (BASE_H / BASE_W) - viewBox.w * (BASE_H / BASE_W)) / 2;
+                
+                setViewBox();
+            }
+        }
+    }, { passive: false });
+
+    zoomContainer.addEventListener('touchend', e => {
+        if (e.touches.length < 2) initialPinchDist = 0;
+        
+        if (e.touches.length === 0) {
+            isPanning = false;
+        } else if (e.touches.length === 1) {
+            // 如果雙指放開一指，剩下的那指重新接管平移
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            isPanning = true;
+        }
+    });
+
+    /* =========================================================
+       新增：全域禁止雙指縮放 (阻擋 Safari 強制縮放網頁)
+    ========================================================= */
+    document.addEventListener('touchmove', function(e) {
+        // 如果偵測到雙指以上操作，且目標「不是」在 zoomContainer 內，就阻止預設行為
+        if (e.touches.length > 1 && !e.target.closest('#zoomContainer')) {
+            e.preventDefault();
+        }
+    }, { passive: false });
 
     exModeSel.addEventListener('change', syncFretboardState);
     [keySel, scaleSel, chordSel, arpStrSel, strPairSel, strTriSel, strQuadSel, strQuinSel].forEach(el => el.addEventListener('change', syncFretboardState));
