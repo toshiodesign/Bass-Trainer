@@ -36,13 +36,14 @@
             background: var(--bg-body);
             color: var(--text-main);
             margin: 0;
+            /* 底部留出空間給懸浮控制列 */
             padding: 15px 10px 100px 10px; 
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: flex-start;
             overflow-x: hidden;
-            -webkit-tap-highlight-color: transparent; 
+            -webkit-tap-highlight-color: transparent; /* 移除手機點擊閃爍 */
         }
 
         .app-container {
@@ -80,6 +81,7 @@
         
         .header-actions { display: flex; align-items: center; gap: 10px; }
 
+        /* 摺疊設定區過渡動畫 */
         .settings-panel {
             max-height: 500px;
             opacity: 1;
@@ -167,6 +169,13 @@
         .legend-item { display: flex; align-items: center; gap: 6px; }
         .dot { width: 10px; height: 10px; border-radius: 50%; }
         .note-text { font-family: inherit; font-weight: bold; font-size: 10px; }
+
+        .reset-zoom-btn {
+            position: absolute; bottom: 50px; right: 20px; background: rgba(0,0,0,0.6);
+            color: white; border: 1px solid var(--btn-border); padding: 8px 16px;
+            border-radius: 6px; font-size: 0.8rem; cursor: pointer; z-index: 20; transition: 0.2s;
+        }
+        .reset-zoom-btn:hover { background: var(--note-active); border-color: var(--note-active); }
         
         .hidden { display: none !important; }
 
@@ -197,16 +206,16 @@
         .beat-card {
             border: 2px solid var(--btn-border); border-radius: 8px; width: 100px; height: 100px;
             display: flex; justify-content: center; align-items: center; transition: 0.15s ease;
-            background: var(--btn-bg); cursor: pointer; /* 加上游標提示可以點擊 */
+            background: var(--btn-bg);
         }
         .beat-card.active {
             border-color: var(--note-active); transform: scale(1.05);
             box-shadow: 0 0 15px rgba(52, 152, 219, 0.3); background: var(--bg-app);
         }
-        .beat-card.changing { animation: cardUpdate 0.2s; border-color: var(--note-extension);}
+        .beat-card.changing { animation: cardUpdate 0.2s; }
         @keyframes cardUpdate { 0% { opacity: 0.5; transform: scale(0.95); } 100% { opacity: 1; transform: scale(1); } }
         
-        .beat-card .svg-container { width: 70%; height: 70%; opacity: 0.6; transition: 0.15s; pointer-events: none; }
+        .beat-card .svg-container { width: 70%; height: 70%; opacity: 0.6; transition: 0.15s; }
         .beat-card.active .svg-container { opacity: 1; }
         .beat-card svg { width: 100%; height: 100%; fill: var(--text-main); }
 
@@ -226,15 +235,18 @@
         .pattern-item svg { width: 100%; height: 100%; pointer-events: none; fill: var(--text-main); }
 
         /* =========================================
-           ✨ 懸浮控制列
+           ✨ 懸浮控制列 (Sticky Bottom Bar)
         ========================================= */
         .fixed-bottom-bar {
             position: fixed; bottom: 0; left: 0; width: 100%;
-            background: rgba(30, 30, 30, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            background: rgba(30, 30, 30, 0.85); /* 毛玻璃效果 */
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             border-top: 1px solid var(--btn-border);
             display: flex; align-items: center; justify-content: center; gap: 20px;
-            padding: 15px 10px; z-index: 100; box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
-            padding-bottom: max(15px, env(safe-area-inset-bottom));
+            padding: 15px 10px; z-index: 100;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+            padding-bottom: max(15px, env(safe-area-inset-bottom)); /* 適配 iPhone 底部橫條 */
         }
 
         .btn-circle {
@@ -254,7 +266,9 @@
             cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px;
         }
         .btn-pill:hover { border-color: var(--note-active); color: var(--text-main); }
-        .btn-pill.active { background: var(--btn-active-bg); color: var(--btn-active-text); border-color: var(--btn-active-bg); }
+        .btn-pill.active {
+            background: var(--btn-active-bg); color: var(--btn-active-text); border-color: var(--btn-active-bg);
+        }
 
         .icon-btn { 
             padding: 6px 12px; font-size: 1rem; border-radius: 6px; border: 1px solid var(--btn-border); 
@@ -266,11 +280,13 @@
         .btn-sm { padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; border: 1px solid var(--btn-border); background: var(--btn-bg); color: var(--text-main); cursor: pointer; font-weight: bold; transition: 0.2s;}
         .btn-sm:hover { background: var(--note-active); border-color: var(--note-active); color: var(--btn-active-text);}
 
-        /* 📱 橫豎屏自適應 */
+        /* =========================================
+           📱 橫豎屏自適應 (Media Queries)
+        ========================================= */
         @media screen and (orientation: landscape) and (max-height: 600px) {
             body { padding-top: 5px; }
-            .header-section { display: none; } 
-            .legend { display: none; }         
+            .header-section { display: none; } /* 橫向時隱藏標題，最大化空間 */
+            .legend { display: none; }         /* 隱藏圖例 */
             .fretboard-wrapper { height: 60vh; }
             .rhythm-stage { min-height: 100px; padding: 15px; }
             .beat-card { width: 80px; height: 80px; }
@@ -301,13 +317,34 @@
             <div class="settings-panel collapsed" id="fretSettings">
                 <div class="controls-row">
                     <select id="exerciseModeSelect">
-                        <option value="scale">模式: 全指板音階</option><option value="arpeggio" selected>模式: 和弦指法</option><option value="pair_drill">模式: 雙弦模進</option><option value="triplet_drill">模式: 三弦模進</option><option value="quad_drill">模式: 四弦模進</option><option value="quint_drill">模式: 五弦模進</option>
+                        <option value="scale">模式: 全指板音階</option>
+                        <option value="arpeggio" selected>模式: 和弦指法</option>
+                        <option value="pair_drill">模式: 雙弦模進</option>
+                        <option value="triplet_drill">模式: 三弦模進</option>
+                        <option value="quad_drill">模式: 四弦模進</option>
+                        <option value="quint_drill">模式: 五弦模進</option>
                     </select>
                     <select id="keySelect">
-                        <option value="0">Key: C</option><option value="1">Key: Db</option><option value="2">Key: D</option><option value="3">Key: Eb</option><option value="4">Key: E</option><option value="5">Key: F</option><option value="6">Key: Gb</option><option value="7">Key: G</option><option value="8">Key: Ab</option><option value="9">Key: A</option><option value="10">Key: Bb</option><option value="11">Key: B</option>
+                        <option value="0">Key: C</option>
+                        <option value="1">Key: Db</option>
+                        <option value="2">Key: D</option>
+                        <option value="3">Key: Eb</option>
+                        <option value="4">Key: E</option>
+                        <option value="5">Key: F</option>
+                        <option value="6">Key: Gb</option>
+                        <option value="7">Key: G</option>
+                        <option value="8">Key: Ab</option>
+                        <option value="9">Key: A</option>
+                        <option value="10">Key: Bb</option>
+                        <option value="11">Key: B</option>
                     </select>
                     <select id="scaleSelect" class="hidden">
-                        <optgroup label="Basic Scales"><option value="major">Major (Ionian)</option><option value="minor">Natural Minor</option><option value="maj_pent">Major Pentatonic</option><option value="min_pent">Minor Pentatonic</option></optgroup>
+                        <optgroup label="Basic Scales">
+                            <option value="major">Major (Ionian)</option>
+                            <option value="minor">Natural Minor</option>
+                            <option value="maj_pent">Major Pentatonic</option>
+                            <option value="min_pent">Minor Pentatonic</option>
+                        </optgroup>
                     </select>
                     <select id="chordTypeSelect" class="hidden">
                         <optgroup label="三和弦"><option value="maj">Major</option><option value="min">Minor</option><option value="dim">Diminished</option><option value="aug">Augmented</option></optgroup>
@@ -331,6 +368,7 @@
             <div class="fretboard-wrapper" id="zoomContainer">
                 <svg id="fretboard" viewBox="0 0 1650 240" preserveAspectRatio="xMidYMid meet"></svg>
             </div>
+            <button class="reset-zoom-btn" id="resetZoomBtn">Reset View</button>
 
             <div class="legend">
                 <div class="legend-item"><span class="dot" style="background:var(--note-root)"></span>根音</div>
@@ -415,6 +453,7 @@
     <script src="rhythm_data_6.js"></script>
     <script src="rhythm_data_7.js"></script>
     <script src="rhythm_data_8.js"></script>
+
     <script src="app.js"></script>
 </body>
 </html>
