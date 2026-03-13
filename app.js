@@ -475,7 +475,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     /* =========================================================
-       新增：手機版 Touch 縮放與平移邏輯
+       手機版 Touch 縮放與平移邏輯
     ========================================================= */
     function getTouchDistance(touches) {
         return Math.hypot(touches[0].clientX - touches[1].clientX, touches[0].clientY - touches[1].clientY);
@@ -551,7 +551,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     /* =========================================================
-       新增：全域禁止雙指縮放 (阻擋 Safari 強制縮放網頁)
+       全域禁止雙指縮放 (阻擋 Safari 強制縮放網頁)
     ========================================================= */
     document.addEventListener('touchmove', function(e) {
         // 如果偵測到雙指以上操作，且目標「不是」在 zoomContainer 內，就阻止預設行為
@@ -576,13 +576,34 @@ document.addEventListener("DOMContentLoaded", () => {
        MODULE 2: RHYTHM GENERATOR LOGIC (1 Beat = 1 Card)
     ========================================================= */
 
-    // 加入您指定的 四分與八分音符/休止 變化
+    // 使用向量圖形 (Path) 替換原本的純文字，確保所有手機設備都能完美渲染
     const BASIC_PATTERNS = [
-        { id: 'custom_q', type: 'simple', name: '四分音符', events: [0], svg: `<svg viewBox="0 0 200 130"><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-size="85" fill="currentColor">♩</text></svg>` },
-        { id: 'custom_qr', type: 'simple', name: '四分休止符', events: [], svg: `<svg viewBox="0 0 200 130"><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-size="85" fill="currentColor">𝄽</text></svg>` },
-        { id: 'custom_88', type: 'simple', name: '兩個八分音符', events: [0, 0.5], svg: `<svg viewBox="0 0 200 130"><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-size="85" fill="currentColor">♫</text></svg>` },
-        { id: 'custom_8r', type: 'simple', name: '八分音符+休止', events: [0], svg: `<svg viewBox="0 0 200 130"><text x="35%" y="55%" dominant-baseline="middle" text-anchor="middle" font-size="85" fill="currentColor">♪</text><text x="65%" y="55%" dominant-baseline="middle" text-anchor="middle" font-size="85" fill="currentColor">𝄾</text></svg>` },
-        { id: 'custom_r8', type: 'simple', name: '八分休止+音符', events: [0.5], svg: `<svg viewBox="0 0 200 130"><text x="35%" y="55%" dominant-baseline="middle" text-anchor="middle" font-size="85" fill="currentColor">𝄾</text><text x="65%" y="55%" dominant-baseline="middle" text-anchor="middle" font-size="85" fill="currentColor">♪</text></svg>` }
+        { 
+            id: 'custom_q', type: 'simple', name: '四分音符', events: [0], 
+            svg: `<svg viewBox="0 0 200 130"><g fill="currentColor" transform="translate(85, 25)"><ellipse cx="15" cy="65" rx="14" ry="10" transform="rotate(-20 15 65)"/><rect x="25" y="10" width="3" height="55"/></g></svg>` 
+        },
+        { 
+            id: 'custom_qr', type: 'simple', name: '四分休止符', events: [], 
+            svg: `<svg viewBox="0 0 200 130"><g fill="currentColor" transform="translate(75, 20) scale(1.1)"><path d="M 25 15 L 35 25 L 20 45 L 35 55 L 25 75 L 30 75 L 40 52 L 27 43 L 42 23 Z" /></g></svg>` 
+        },
+        { 
+            id: 'custom_88', type: 'simple', name: '兩個八分音符', events: [0, 0.5], 
+            svg: `<svg viewBox="0 0 200 130"><g fill="currentColor" transform="translate(60, 25)"><ellipse cx="15" cy="65" rx="14" ry="10" transform="rotate(-20 15 65)"/><rect x="25" y="10" width="3" height="55"/><ellipse cx="65" cy="65" rx="14" ry="10" transform="rotate(-20 65 65)"/><rect x="75" y="10" width="3" height="55"/><rect x="25" y="10" width="53" height="8"/></g></svg>` 
+        },
+        { 
+            id: 'custom_8r', type: 'simple', name: '八分音符+休止', events: [0], 
+            svg: `<svg viewBox="0 0 200 130">
+                    <g fill="currentColor" transform="translate(40, 25)"><ellipse cx="15" cy="65" rx="14" ry="10" transform="rotate(-20 15 65)"/><rect x="25" y="10" width="3" height="55"/><path d="M 28 10 Q 45 20 35 45 Q 30 25 28 25 Z"/></g>
+                    <g fill="currentColor" transform="translate(110, 35)"><circle cx="15" cy="15" r="6"/><path d="M 15 15 Q 35 -5 35 25 L 25 65 H 22 L 32 25 Q 32 5 15 20 Z"/></g>
+                  </svg>` 
+        },
+        { 
+            id: 'custom_r8', type: 'simple', name: '八分休止+音符', events: [0.5], 
+            svg: `<svg viewBox="0 0 200 130">
+                    <g fill="currentColor" transform="translate(50, 35)"><circle cx="15" cy="15" r="6"/><path d="M 15 15 Q 35 -5 35 25 L 25 65 H 22 L 32 25 Q 32 5 15 20 Z"/></g>
+                    <g fill="currentColor" transform="translate(100, 25)"><ellipse cx="15" cy="65" rx="14" ry="10" transform="rotate(-20 15 65)"/><rect x="25" y="10" width="3" height="55"/><path d="M 28 10 Q 45 20 35 45 Q 30 25 28 25 Z"/></g>
+                  </svg>` 
+        }
     ];
 
     if (!window.ALL_PATTERNS) window.ALL_PATTERNS = [];
