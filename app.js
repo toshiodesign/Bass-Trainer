@@ -20,13 +20,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const SCALES = {
         'major':    [0, 2, 4, 5, 7, 9, 11],
         'minor':    [0, 2, 3, 5, 7, 8, 10],
-        'ionian':     [0, 2, 4, 5, 7, 9, 11],
-        'dorian':     [0, 2, 3, 5, 7, 9, 10],
-        'phrygian':   [0, 1, 3, 5, 7, 8, 10],
-        'lydian':     [0, 2, 4, 6, 7, 9, 11],
-        'mixolydian': [0, 2, 4, 5, 7, 9, 10],
-        'aeolian':    [0, 2, 3, 5, 7, 8, 10],
-        'locrian':    [0, 1, 3, 5, 6, 8, 10],
         'maj_pent': [0, 2, 4, 7, 9],
         'min_pent': [0, 3, 5, 7, 10],
         'maj':      [0, 4, 7],
@@ -45,13 +38,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const INTERVAL_NAMES = {
         'major':    ['R', '2', '3', '4', '5', '6', '7'],
         'minor':    ['R', '2', 'b3', '4', '5', 'b6', 'b7'],
-        'ionian':     ['R', '2', '3', '4', '5', '6', '7'],
-        'dorian':     ['R', '2', 'b3', '4', '5', '6', 'b7'],
-        'phrygian':   ['R', 'b2', 'b3', '4', '5', 'b6', 'b7'],
-        'lydian':     ['R', '2', '3', '#4', '5', '6', '7'],
-        'mixolydian': ['R', '2', '3', '4', '5', '6', 'b7'],
-        'aeolian':    ['R', '2', 'b3', '4', '5', 'b6', 'b7'],
-        'locrian':    ['R', 'b2', 'b3', '4', 'b5', 'b6', 'b7'],
         'maj_pent': ['R', '2', '3', '5', '6'],
         'min_pent': ['R', 'b3', '4', '5', 'b7'],
         'maj':      ['R', '3', '5'],
@@ -93,30 +79,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const SCALE_MODE_NAMES = {
         'major': ["Ionian", "Dorian", "Phrygian", "Lydian", "Mixolydian", "Aeolian", "Locrian"],
-        'minor': ["Aeolian", "Locrian", "Ionian", "Dorian", "Phrygian", "Lydian", "Mixolydian"],
+        'minor': ["Aeolian", "Locrian", "Ionian", "Dorian", "Phrygian", "Lydian", "Mixo"],
         'maj_pent': ["Shape 1", "Shape 2", "Shape 3", "Shape 4", "Shape 5"],
         'min_pent': ["Shape 1", "Shape 2", "Shape 3", "Shape 4", "Shape 5"]
     };
-
-    const DIATONIC_CHORDS = [
-        { name: 'Imaj7', interval: 0, type: 'maj7' },
-        { name: 'IIm7', interval: 2, type: 'min7' },
-        { name: 'IIIm7', interval: 4, type: 'min7' },
-        { name: 'IVmaj7', interval: 5, type: 'maj7' },
-        { name: 'V7', interval: 7, type: 'dom7' },
-        { name: 'VIm7', interval: 9, type: 'min7' },
-        { name: 'VIIm7b5', interval: 11, type: 'm7b5' }
-    ];
-    
-    const MINOR_DIATONIC_CHORDS = [
-        { name: 'Im7', interval: 0, type: 'min7' },
-        { name: 'IIm7b5', interval: 2, type: 'm7b5' },
-        { name: 'bIIImaj7', interval: 3, type: 'maj7' },
-        { name: 'IVm7', interval: 5, type: 'min7' },
-        { name: 'Vm7', interval: 7, type: 'min7' },
-        { name: 'bVImaj7', interval: 8, type: 'maj7' },
-        { name: 'bVII7', interval: 10, type: 'dom7' }
-    ];
 
     let currentRoot = 0;
     let currentScaleType = 'maj7';
@@ -133,7 +99,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const scaleSel = document.getElementById('scaleSelect');
     const chordSel = document.getElementById('chordTypeSelect');
     const arpStrSel = document.getElementById('arpeggioStringSelect');
-    const arpInvSel = document.getElementById('arpeggioInversionSelect');
     const strPairSel = document.getElementById('stringPairSelect');
     const strTriSel = document.getElementById('stringTripletSelect');
     const strQuadSel = document.getElementById('stringQuadSelect');
@@ -144,35 +109,25 @@ document.addEventListener("DOMContentLoaded", () => {
     const chromaticSel = document.getElementById('chromaticFilterSelect');
 
     function getNoteValue(stringIdx, fret) { return (TUNING[stringIdx] + fret) % 12; }
-    
-    function getNoteName(val, interval, masterRootVal = 0) {
-        const PREFERS_SHARP = [2, 4, 7, 9, 11]; 
-        let useSharp = PREFERS_SHARP.includes(masterRootVal);
-        if (interval) {
-            if (interval.includes('#')) useSharp = true;
-            if (interval.includes('b')) useSharp = false;
-        }
-        return useSharp ? NOTES_SHARP[val] : NOTES_FLAT[val];
+    function getNoteName(val, interval) {
+        if (interval && interval.includes('#')) return NOTES_SHARP[val];
+        if (interval && interval.includes('b')) return NOTES_FLAT[val];
+        return NOTES_FLAT[val];
     }
     
-    function getIntervalLabel(noteVal, customRoot = null, customType = null) {
+    function getIntervalLabel(noteVal) {
         if (exerciseMode === 'parallel' || exerciseMode === 'chromatic') {
             const CHROMATIC_INTERVALS = ['R', 'b2', '2', 'b3', '3', '4', 'b5', '5', 'b6', '6', 'b7', '7'];
-            let rootOffset = (noteVal - (customRoot !== null ? customRoot : parseInt(currentRoot)) + 12) % 12;
+            let rootOffset = (noteVal - parseInt(currentRoot) + 12) % 12;
             return CHROMATIC_INTERVALS[rootOffset];
         }
 
-        let typeToUse = customType !== null ? customType : currentScaleType;
-        if (exerciseMode === 'pair_drill' || exerciseMode === 'triplet_drill' || exerciseMode === 'quad_drill' || exerciseMode === 'quint_drill' || ((exerciseMode === 'diatonic' || exerciseMode === 'diatonic_minor') && customType === null)) {
-            typeToUse = exerciseMode === 'diatonic_minor' ? 'minor' : 'major';
-        }
-        
-        let rootToUse = customRoot !== null ? customRoot : parseInt(currentRoot);
-        const scaleIntervals = SCALES[typeToUse];
+        let type = (exerciseMode === 'pair_drill' || exerciseMode === 'triplet_drill' || exerciseMode === 'quad_drill' || exerciseMode === 'quint_drill') ? 'major' : currentScaleType;
+        const scaleIntervals = SCALES[type];
         if (!scaleIntervals) return null;
-        const scaleNotes = scaleIntervals.map(i => (rootToUse + i) % 12);
+        const scaleNotes = scaleIntervals.map(i => (parseInt(currentRoot) + i) % 12);
         const idx = scaleNotes.indexOf(noteVal);
-        if (idx !== -1) return INTERVAL_NAMES[typeToUse][idx];
+        if (idx !== -1) return INTERVAL_NAMES[type][idx];
         return null;
     }
 
@@ -244,100 +199,31 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function getNotesForAnchor(anchorId, scaleNotes) {
-        if (exerciseMode === 'arpeggio' || exerciseMode === 'diatonic' || exerciseMode === 'diatonic_minor') {
+        if (exerciseMode === 'arpeggio') {
             let stringIdx = parseInt(arpStrSel.value);
             let chordType = chordSel.value;
-            let targetRoot = parseInt(currentRoot);
-            let shape = anchorId;
-            let inv = (exerciseMode === 'arpeggio') ? (parseInt(arpInvSel.value) || 0) : 0;
-
-            if (exerciseMode === 'diatonic' || exerciseMode === 'diatonic_minor') {
-                let dIndex = parseInt(anchorId.split('_')[1]);
-                let dc = (exerciseMode === 'diatonic') ? DIATONIC_CHORDS[dIndex] : MINOR_DIATONIC_CHORDS[dIndex];
-                chordType = dc.type;
-                targetRoot = (parseInt(currentRoot) + dc.interval) % 12;
-                shape = '1st'; 
-                inv = 0;
+            let shapeOffsets = ARPEGGIO_SHAPES[chordType][anchorId];
+            
+            let anchorFret = -1;
+            let minFretOffset = Math.min(...shapeOffsets.map(o => o[1]));
+            for (let f = 1; f <= 20; f++) {
+                if (getNoteValue(stringIdx, f) === parseInt(currentRoot)) {
+                    if (f + minFretOffset >= 0) { anchorFret = f; break; }
+                }
             }
 
-            let intervals = SCALES[chordType] || SCALES['major'];
             let activeNotes = [];
-
-            if (inv === 0) {
-                let shapeOffsets = ARPEGGIO_SHAPES[chordType][shape];
-                if (!shapeOffsets) shapeOffsets = ARPEGGIO_SHAPES[chordType]['1st']; 
-                
-                let anchorFret = -1;
-                let minFretOffset = Math.min(...shapeOffsets.map(o => o[1]));
-                for (let f = 1; f <= 20; f++) {
-                    if (getNoteValue(stringIdx, f) === targetRoot) {
-                        if (f + minFretOffset >= 0) { anchorFret = f; break; }
+            if (anchorFret !== -1) {
+                shapeOffsets.forEach(offset => {
+                    let s = stringIdx + offset[0];
+                    let f = anchorFret + offset[1];
+                    if (s >= 0 && s < STRINGS && f >= 0 && f <= FRETS) {
+                        activeNotes.push({ s: s, fret: f, val: getNoteValue(s, f), isRoot: offset[0] === 0 && offset[1] === 0 });
                     }
-                }
-
-                if (anchorFret !== -1) {
-                    shapeOffsets.forEach(offset => {
-                        let s = stringIdx + offset[0];
-                        let f = anchorFret + offset[1];
-                        if (s >= 0 && s < STRINGS && f >= 0 && f <= FRETS) {
-                            activeNotes.push({ 
-                                s: s, fret: f, val: getNoteValue(s, f), 
-                                isRoot: offset[0] === 0 && offset[1] === 0,
-                                displayRoot: targetRoot,
-                                displayType: chordType
-                            });
-                        }
-                    });
-                }
-            } 
-            else {
-                let bassInterval = intervals[inv % intervals.length];
-                let bassNoteVal = (targetRoot + bassInterval) % 12;
-                let chordNotes = intervals.map(i => (targetRoot + i) % 12);
-
-                let anchorFret = -1;
-                for (let f = 1; f <= 20; f++) {
-                    if (getNoteValue(stringIdx, f) === bassNoteVal) {
-                        anchorFret = f; break;
-                    }
-                }
-
-                if (anchorFret !== -1) {
-                    let minFret, maxFret;
-                    if (shape === '1st') { minFret = anchorFret; maxFret = anchorFret + 4; }
-                    else if (shape === '2nd') { minFret = anchorFret - 2; maxFret = anchorFret + 2; }
-                    else if (shape === '4th') { minFret = anchorFret - 4; maxFret = anchorFret; }
-                    else { minFret = anchorFret - 1; maxFret = anchorFret + 3; }
-
-                    for(let s = stringIdx; s >= 0; s--) {
-                        for(let f = minFret; f <= maxFret; f++) {
-                            if (f >= 0 && f <= FRETS) {
-                                let val = getNoteValue(s, f);
-                                if (chordNotes.includes(val)) {
-                                    if (s === stringIdx && f < anchorFret) continue; 
-                                    activeNotes.push({
-                                        s: s, fret: f, val: val,
-                                        isRoot: (val === targetRoot),
-                                        displayRoot: targetRoot,
-                                        displayType: chordType
-                                    });
-                                }
-                            }
-                        }
-                    }
-
-                    activeNotes.sort((a,b) => {
-                        let pitchA = (4 - a.s) * 5 + a.fret;
-                        let pitchB = (4 - b.s) * 5 + b.fret;
-                        return pitchA - pitchB;
-                    });
-                    
-                    activeNotes = activeNotes.slice(0, intervals.length);
-                }
+                });
             }
             return activeNotes;
-            
-        } else if (!['scale', 'parallel', 'chromatic', 'modes', 'modes_minor'].includes(exerciseMode)) {
+        } else if (exerciseMode !== 'scale' && exerciseMode !== 'parallel' && exerciseMode !== 'chromatic') {
             let pos = generatedPositions.find(p => p.id === anchorId);
             if (!pos) return [];
             return pos.notes.map(n => ({ s: n.s, fret: n.fret, val: n.val, isRoot: n.val === parseInt(currentRoot) }));
@@ -369,21 +255,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function syncFretboardState() {
         exerciseMode = exModeSel.value;
-        const selectors = [scaleSel, strPairSel, strTriSel, strQuadSel, strQuinSel, chordSel, arpStrSel, arpInvSel, parallelSel, chromaticSel];
+        const selectors = [scaleSel, strPairSel, strTriSel, strQuadSel, strQuinSel, chordSel, arpStrSel, parallelSel, chromaticSel];
         selectors.forEach(el => { if(el) el.classList.add('hidden'); });
 
         if (exerciseMode === 'scale') {
             scaleSel.classList.remove('hidden'); currentScaleType = scaleSel.value;
         } else if (exerciseMode === 'arpeggio') {
-            chordSel.classList.remove('hidden'); 
-            arpStrSel.classList.remove('hidden');
-            arpInvSel.classList.remove('hidden');
+            chordSel.classList.remove('hidden'); arpStrSel.classList.remove('hidden');
             currentScaleType = chordSel.value;
-        } else if (exerciseMode === 'diatonic' || exerciseMode === 'diatonic_minor') {
-            arpStrSel.classList.remove('hidden'); 
-            currentScaleType = (exerciseMode === 'diatonic') ? 'major' : 'minor'; 
-        } else if (exerciseMode === 'modes' || exerciseMode === 'modes_minor') {
-            currentScaleType = (exerciseMode === 'modes') ? 'major' : 'minor'; 
         } else if (exerciseMode === 'parallel') {
             parallelSel.classList.remove('hidden');
             currentScaleType = 'major';
@@ -408,18 +287,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 { id: '2nd', label: 'Shape 2', subLabel: '2nd Finger' },
                 { id: '4th', label: 'Shape 3', subLabel: '4th Finger' }
             ];
-        } else if (exerciseMode === 'diatonic' || exerciseMode === 'diatonic_minor') {
-            let chordList = (exerciseMode === 'diatonic') ? DIATONIC_CHORDS : MINOR_DIATONIC_CHORDS;
-            generatedPositions = chordList.map((dc, idx) => ({
-                id: `dia_${idx}`, label: dc.name, subLabel: dc.type
-            }));
-        } else if (exerciseMode === 'modes' || exerciseMode === 'modes_minor') {
-            let isMajor = (exerciseMode === 'modes');
-            let chordList = isMajor ? DIATONIC_CHORDS : MINOR_DIATONIC_CHORDS;
-            let modeNames = SCALE_MODE_NAMES[isMajor ? 'major' : 'minor'];
-            generatedPositions = chordList.map((dc, idx) => ({
-                id: `mode_${idx}`, label: modeNames[idx], subLabel: `${dc.name} (${dc.type})`
-            }));
         } else if (exerciseMode === 'parallel' || exerciseMode === 'chromatic') {
             generatedPositions = [{ id: 'all', label: '全指板探索', modeName: '' }];
         } else {
@@ -428,8 +295,7 @@ document.addEventListener("DOMContentLoaded", () => {
             generatedPositions = generateSequenceDrillPositions();
         }
         
-        const ignoreSingleMode = ['parallel', 'chromatic', 'modes', 'modes_minor'];
-        if (!isFretboardMultiMode || activeAnchors.size === 0 || ignoreSingleMode.includes(exerciseMode)) {
+        if (!isFretboardMultiMode || activeAnchors.size === 0 || exerciseMode === 'parallel' || exerciseMode === 'chromatic') {
             activeAnchors.clear();
             if(generatedPositions.length > 0) activeAnchors.add(generatedPositions[0].id);
         }
@@ -439,8 +305,6 @@ document.addEventListener("DOMContentLoaded", () => {
     function renderFretboard() {
         currentViewMode = viewModeSel.value;
         let scaleIntervals = (exerciseMode === 'scale' || exerciseMode === 'arpeggio') ? SCALES[currentScaleType] : SCALES['major'];
-        if (exerciseMode === 'diatonic_minor' || exerciseMode === 'modes_minor') scaleIntervals = SCALES['minor'];
-        
         const scaleNotes = scaleIntervals.map(i => (parseInt(currentRoot) + i) % 12);
 
         const btnContainer = document.getElementById('posBtnContainer');
@@ -453,8 +317,7 @@ document.addEventListener("DOMContentLoaded", () => {
             let label = (exerciseMode === 'scale') ? ((pos.id === 0) ? "Open" : `Pos ${idx + 1}`) : pos.label;
             btn.innerHTML = `${label}<span class="mode-name">${pos.modeName || pos.subLabel}</span>`;
             btn.onclick = () => {
-                const ignoreSingleMode = ['parallel', 'chromatic', 'modes', 'modes_minor'];
-                if (isFretboardMultiMode && !ignoreSingleMode.includes(exerciseMode)) {
+                if (isFretboardMultiMode && exerciseMode !== 'parallel' && exerciseMode !== 'chromatic') {
                     if (activeAnchors.has(pos.id)) activeAnchors.delete(pos.id);
                     else activeAnchors.add(pos.id);
                 } else {
@@ -501,12 +364,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     <div class="legend-item"><span class="dot" style="background:var(--note-passing-bg); border:1px solid var(--note-passing-border)"></span>經過音 (Passing Tones)</div>
                 `;
             }
-        } else if (exerciseMode === 'modes' || exerciseMode === 'modes_minor') {
-            legend.innerHTML = `
-                <div class="legend-item"><span class="dot" style="background:var(--note-root)"></span>調式根音 (Mode Root)</div>
-                <div class="legend-item"><span class="dot" style="background:var(--note-active)"></span>調式和弦音 (1, 3, 5, 7)</div>
-                <div class="legend-item"><span class="dot" style="background:var(--note-ghost)"></span>調式延伸音 (2, 4, 6)</div>
-            `;
         } else {
             legend.innerHTML = `
                 <div class="legend-item"><span class="dot" style="background:var(--note-root)"></span>根音</div>
@@ -553,6 +410,7 @@ document.addEventListener("DOMContentLoaded", () => {
             svg.appendChild(line);
         }
 
+        // 探索模式：直接繪製全指板
         if (exerciseMode === 'parallel' || exerciseMode === 'chromatic') {
             for (let s = 0; s < STRINGS; s++) {
                 for (let f = 0; f <= FRETS; f++) {
@@ -564,31 +422,8 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        if (exerciseMode === 'modes' || exerciseMode === 'modes_minor') {
-            let isMajor = (exerciseMode === 'modes');
-            let activeModeId = activeAnchors.values().next().value || 'mode_0';
-            let dIndex = parseInt(activeModeId.split('_')[1]);
-            let dc = isMajor ? DIATONIC_CHORDS[dIndex] : MINOR_DIATONIC_CHORDS[dIndex];
-            let modeRoot = (parseInt(currentRoot) + dc.interval) % 12;
-            
-            let modeScaleTypes = isMajor 
-                ? ['ionian', 'dorian', 'phrygian', 'lydian', 'mixolydian', 'aeolian', 'locrian']
-                : ['aeolian', 'locrian', 'ionian', 'dorian', 'phrygian', 'lydian', 'mixolydian'];
-            let currentModeScaleType = modeScaleTypes[dIndex];
-
-            for (let s = 0; s < STRINGS; s++) {
-                for (let f = 0; f <= FRETS; f++) {
-                    let val = getNoteValue(s, f);
-                    if (scaleNotes.includes(val)) {
-                        drawNoteCircle(svg, s, f, val, true, modeRoot, currentModeScaleType);
-                    }
-                }
-            }
-            updateLegend();
-            return;
-        }
-
-        if (['scale', 'arpeggio', 'diatonic', 'diatonic_minor'].includes(exerciseMode)) {
+        // 其他模式：依據演算法與選擇繪製
+        if (exerciseMode === 'scale' || exerciseMode === 'arpeggio') {
             for (let s = 0; s < STRINGS; s++) {
                 for (let f = 0; f <= FRETS; f++) {
                     let val = getNoteValue(s, f);
@@ -612,11 +447,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         });
 
-        mergedActiveNotes.forEach(n => { 
-            if (n.fret <= FRETS) {
-                drawNoteCircle(svg, n.s, n.fret, n.val, true, n.displayRoot, n.displayType); 
-            } 
-        });
+        mergedActiveNotes.forEach(n => { if (n.fret <= FRETS) drawNoteCircle(svg, n.s, n.fret, n.val, true); });
         updateLegend();
     }
 
@@ -634,16 +465,15 @@ document.addEventListener("DOMContentLoaded", () => {
         svg.appendChild(c);
     }
 
-    function drawNoteCircle(svg, s, f, val, isActive, customRoot = null, customType = null) {
+    function drawNoteCircle(svg, s, f, val, isActive) {
         let cx = X_START + (f * FRET_WIDTH) - (FRET_WIDTH/2);
         if (f === 0) cx = X_START - 20;
 
         let cy = Y_START + (s * STRING_GAP);
         
-        let effectiveRoot = customRoot !== null ? customRoot : parseInt(currentRoot);
-        let isRoot = (val === effectiveRoot);
-        let intervalLabel = getIntervalLabel(val, customRoot, customType);
-        let rootOffset = (val - effectiveRoot + 12) % 12;
+        let isRoot = (val === parseInt(currentRoot));
+        let intervalLabel = getIntervalLabel(val);
+        let rootOffset = (val - parseInt(currentRoot) + 12) % 12;
 
         let color = "var(--note-active)";
         let strokeColor = "var(--bg-app)";
@@ -699,26 +529,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 textFill = "var(--note-passing-text)";
                 radius = 12;
             }
-        } else if (exerciseMode === 'modes' || exerciseMode === 'modes_minor') {
-            radius = 14; 
-            isActive = true;
-            let offset = (val - effectiveRoot + 12) % 12;
-            let modeIntervals = SCALES[customType];
-            let chordToneIndex = modeIntervals.indexOf(offset);
-            
-            let isChordTone = [0, 2, 4, 6].includes(chordToneIndex);
-            
-            if (isRoot) {
-                color = "var(--note-root)";
-            } else if (isChordTone) {
-                color = "var(--note-active)"; 
-            } else {
-                color = "var(--note-ghost)";  
-                strokeColor = "transparent";
-                isActive = false; 
-                textFill = "var(--note-text-ghost)";
-                radius = 12;
-            }
         } else {
             let isExtension = ['9', '11', '#11', '13', 'b9', '#9', 'b13', 'b5', '#5', 'bb7'].includes(intervalLabel);
             color = isRoot ? "var(--note-root)" : (isExtension ? "var(--note-extension)" : "var(--note-active)");
@@ -748,8 +558,7 @@ document.addEventListener("DOMContentLoaded", () => {
             txt.setAttribute("fill", textFill);
             
             let labelText = "";
-            let masterKey = parseInt(currentRoot);
-            if (currentViewMode === 'notes') labelText = getNoteName(val, intervalLabel, masterKey);
+            if (currentViewMode === 'notes') labelText = getNoteName(val, intervalLabel);
             else if (currentViewMode === 'solfege') labelText = getSolfegeLabel(val);
             else labelText = CN_INTERVAL_MAP[intervalLabel] || intervalLabel || "?";
             
@@ -834,16 +643,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.addEventListener('touchmove', function(e) { if (e.touches.length > 1 && !e.target.closest('#zoomContainer')) e.preventDefault(); }, { passive: false });
 
+    // Event Listeners for Module 1
     exModeSel.addEventListener('change', syncFretboardState);
-    
-    [keySel, scaleSel, chordSel, arpStrSel, arpInvSel, strPairSel, strTriSel, strQuadSel, strQuinSel, parallelSel, chromaticSel].forEach(el => {
+    [keySel, scaleSel, chordSel, arpStrSel, strPairSel, strTriSel, strQuadSel, strQuinSel, parallelSel, chromaticSel].forEach(el => {
         if(el) el.addEventListener('change', syncFretboardState);
     });
     viewModeSel.addEventListener('change', renderFretboard);
     multiCheck.addEventListener('change', (e) => {
         isFretboardMultiMode = e.target.checked;
-        const ignoreSingleMode = ['parallel', 'chromatic', 'modes', 'modes_minor'];
-        if (!isFretboardMultiMode && activeAnchors.size > 1 && !ignoreSingleMode.includes(exerciseMode)) {
+        if (!isFretboardMultiMode && activeAnchors.size > 1 && exerciseMode !== 'parallel' && exerciseMode !== 'chromatic') {
             const first = activeAnchors.values().next().value; activeAnchors.clear(); activeAnchors.add(first);
         }
         renderFretboard();
@@ -871,13 +679,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let tRoot = 0; 
     let tChord = 'maj7';
-    let tInversion = 0; 
     let tAnswers = [null, null, null]; 
     let activeBoxIdx = null;
 
     const elDisplayRoot = document.getElementById('displayRootName');
     const elTypeSel = document.getElementById('trainerChordType');
-    const elInvSel = document.getElementById('trainerInversion'); 
     const elSeqSel = document.getElementById('trainerSeqMode');
     const elAccToggle = document.getElementById('trainerAccidentalToggle');
     const elTipsToggle = document.getElementById('trainerTipsToggle');
@@ -892,16 +698,9 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById('lblBox2'),
         document.getElementById('lblBox3')
     ];
-    const elLblBox0 = document.getElementById('lblBox0');
-
-    function autoSetAccidental(rootVal) {
-        const PREFERS_SHARP = [2, 4, 7, 9, 11]; 
-        elAccToggle.checked = PREFERS_SHARP.includes(rootVal); 
-        renderTrainerKeyboard();
-    }
 
     function initTrainer() {
-        autoSetAccidental(tRoot);
+        renderTrainerKeyboard();
         resetTrainerRound();
     }
 
@@ -922,29 +721,18 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function resetTrainerRound() {
-        const isFlat = !elAccToggle.checked; 
+        const isFlat = !elAccToggle.checked;
         elDisplayRoot.innerText = isFlat ? NOTES_FLAT[tRoot] : NOTES_SHARP[tRoot];
+        document.getElementById('box0').innerText = elDisplayRoot.innerText;
         
         tAnswers = [null, null, null];
         const chordDef = TRAINER_CHORDS[tChord];
-        
-        const fullIntervals = [0, ...chordDef.intervals];
-        const fullLabels = ['R', ...chordDef.labels];
-
-        const rotIntervals = [...fullIntervals.slice(tInversion), ...fullIntervals.slice(0, tInversion)];
-        const rotLabels = [...fullLabels.slice(tInversion), ...fullLabels.slice(0, tInversion)];
-
-        const bassVal = (tRoot + rotIntervals[0]) % 12;
-        document.getElementById('box0').innerText = isFlat ? NOTES_FLAT[bassVal] : NOTES_SHARP[bassVal];
-        elLblBox0.innerText = rotLabels[0];
 
         boxes.forEach((box, i) => {
             box.querySelector('.val').innerText = '?';
             box.querySelector('.hint-text').innerText = '';
             box.className = 'tone-box input-box';
-            
-            boxLabels[i].innerText = rotLabels[i + 1]; 
-            box.dataset.expectedInterval = rotIntervals[i + 1]; 
+            boxLabels[i].innerText = chordDef.labels[i];
         });
         
         setActiveBox(1);
@@ -977,12 +765,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function validateTrainer() {
+        const chordDef = TRAINER_CHORDS[tChord];
         let allCorrect = true;
         let tipsOn = elTipsToggle.checked;
 
         boxes.forEach((box, i) => {
-            const expectedInterval = parseInt(box.dataset.expectedInterval);
-            const expectedVal = (tRoot + expectedInterval) % 12;
+            const expectedVal = (tRoot + chordDef.intervals[i]) % 12;
             const userVal = tAnswers[i];
             
             box.classList.remove('active', 'error', 'success', 'show-hint');
@@ -994,7 +782,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 allCorrect = false;
                 box.classList.add('error');
                 if (tipsOn) {
-                    box.querySelector('.hint-text').innerText = getExpectedNoteName(tRoot, expectedInterval);
+                    box.querySelector('.hint-text').innerText = getExpectedNoteName(tRoot, chordDef.intervals[i]);
                     box.classList.add('show-hint');
                 }
             } else {
@@ -1015,24 +803,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const seq = elSeqSel.value;
         if (seq === 'chromatic') {
             tRoot = (tRoot + 1) % 12;
-            autoSetAccidental(tRoot);
         } else if (seq === 'circle5ths') {
             tRoot = (tRoot + 7) % 12; 
-            autoSetAccidental(tRoot);
-        } else if (seq === 'diatonic') {
-            if (typeof window.diatonicIdx === 'undefined') window.diatonicIdx = 0;
-            window.diatonicIdx = (window.diatonicIdx + 1) % 7;
-            let dc = DIATONIC_CHORDS[window.diatonicIdx];
-            let masterKey = parseInt(document.getElementById('keySelect').value);
-            tRoot = (masterKey + dc.interval) % 12;
-            tChord = dc.type;
-            document.getElementById('trainerChordType').value = tChord;
-            autoSetAccidental(masterKey);
         } else {
             let next = tRoot;
             while(next === tRoot) next = Math.floor(Math.random() * 12);
             tRoot = next;
-            autoSetAccidental(tRoot);
         }
     }
 
@@ -1040,42 +816,19 @@ document.addEventListener("DOMContentLoaded", () => {
         exModeSel.value = 'arpeggio';
         keySel.value = rootVal;
         chordSel.value = chordType;
-        
-        arpInvSel.value = tInversion; 
-        
         viewModeSel.value = 'intervals'; 
         syncFretboardState();
         document.querySelector('.app-container').scrollIntoView({ behavior: 'smooth' });
     }
 
     elTypeSel.addEventListener('change', e => { tChord = e.target.value; resetTrainerRound(); });
-    elInvSel.addEventListener('change', e => { tInversion = parseInt(e.target.value); resetTrainerRound(); });
     elAccToggle.addEventListener('change', () => { renderTrainerKeyboard(); resetTrainerRound(); });
     
-    elSeqSel.addEventListener('change', e => { 
-        if (e.target.value === 'diatonic') {
-            window.diatonicIdx = 0;
-            let dc = DIATONIC_CHORDS[0];
-            let masterKey = parseInt(document.getElementById('keySelect').value);
-            tRoot = (masterKey + dc.interval) % 12;
-            tChord = dc.type;
-            document.getElementById('trainerChordType').value = tChord;
-            autoSetAccidental(masterKey);
-        } else {
-            autoSetAccidental(tRoot);
-        }
-        resetTrainerRound(); 
-    });
-
     document.getElementById('btnPrevRoot').addEventListener('click', () => {
-        tRoot = (tRoot - 1 + 12) % 12; 
-        autoSetAccidental(tRoot);
-        resetTrainerRound();
+        tRoot = (tRoot - 1 + 12) % 12; resetTrainerRound();
     });
     document.getElementById('btnNextRoot').addEventListener('click', () => {
-        tRoot = (tRoot + 1) % 12; 
-        autoSetAccidental(tRoot);
-        resetTrainerRound();
+        tRoot = (tRoot + 1) % 12; resetTrainerRound();
     });
 
     boxes.forEach(box => {
@@ -1194,6 +947,90 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('toggleLibBtn').addEventListener('click', () => { const grid = document.getElementById('libraryGrid'); grid.classList.toggle('collapsed'); document.getElementById('toggleLibBtn').innerText = grid.classList.contains('collapsed') ? '▶' : '▼'; });
     document.getElementById('selectAllBtn').addEventListener('click', () => { activePatternIDs = window.ALL_PATTERNS.filter(p => p.type === currentMeterMode).map(p => p.id); document.querySelectorAll('.pattern-item').forEach(el => el.classList.add('selected')); });
     document.getElementById('deselectAllBtn').addEventListener('click', () => { activePatternIDs = []; document.querySelectorAll('.pattern-item').forEach(el => el.classList.remove('selected')); });
+
+
+    /* =========================================================
+       MODULE 4: PRACTICE PLAN GENERATOR LOGIC
+    ========================================================= */
+    const planRhythmEl = document.getElementById('planRhythm');
+    const planTechniqueEl = document.getElementById('planTechnique');
+    const planKeyEl = document.getElementById('planKey');
+    const planConceptEl = document.getElementById('planConcept');
+    const btnGeneratePlan = document.getElementById('btnGeneratePlan');
+
+    // 依據圖片內容建立練習資料庫
+    const PRACTICE_PLAN_DATA = {
+        rhythms: [
+            "1 note per beat<br><span style='font-size:0.8rem;color:var(--text-sub)'>Quarter notes</span>", 
+            "2 notes per beat<br><span style='font-size:0.8rem;color:var(--text-sub)'>Eighth notes</span>", 
+            "3 notes per beat<br><span style='font-size:0.8rem;color:var(--text-sub)'>Eighth-note triplets</span>", 
+            "4 notes per beat<br><span style='font-size:0.8rem;color:var(--text-sub)'>Sixteenth notes</span>"
+        ],
+        techniques: [
+            "1 pluck per note", "2 plucks per note", "3 plucks per note", 
+            "Slap", "Palm muting"
+        ],
+        keys: [
+            { label: "C", val: 0 }, { label: "Db", val: 1 }, { label: "D", val: 2 }, { label: "Eb", val: 3 },
+            { label: "E", val: 4 }, { label: "F", val: 5 }, { label: "Gb", val: 6 }, { label: "G", val: 7 },
+            { label: "Ab", val: 8 }, { label: "A", val: 9 }, { label: "Bb", val: 10 }, { label: "B", val: 11 }
+        ],
+        concepts: [
+            { label: "Major scale<br><span style='font-size:0.8rem;color:var(--text-sub)'>Three notes per string</span>", mode: 'scale', targetSel: 'scaleSelect', targetVal: 'major' },
+            { label: "Major scale<br><span style='font-size:0.8rem;color:var(--text-sub)'>Two octaves</span>", mode: 'scale', targetSel: 'scaleSelect', targetVal: 'major' },
+            { label: "Pentatonics<br><span style='font-size:0.8rem;color:var(--text-sub)'>Major</span>", mode: 'scale', targetSel: 'scaleSelect', targetVal: 'maj_pent' },
+            { label: "Pentatonics<br><span style='font-size:0.8rem;color:var(--text-sub)'>Minor</span>", mode: 'scale', targetSel: 'scaleSelect', targetVal: 'min_pent' },
+            { label: "Triads<br><span style='font-size:0.8rem;color:var(--text-sub)'>Root position (Major)</span>", mode: 'arpeggio', targetSel: 'chordTypeSelect', targetVal: 'maj' },
+            { label: "Triads<br><span style='font-size:0.8rem;color:var(--text-sub)'>Spread shapes (Minor)</span>", mode: 'arpeggio', targetSel: 'chordTypeSelect', targetVal: 'min' },
+            { label: "Seventh chords<br><span style='font-size:0.8rem;color:var(--text-sub)'>Maj7</span>", mode: 'arpeggio', targetSel: 'chordTypeSelect', targetVal: 'maj7' },
+            { label: "Seventh chords<br><span style='font-size:0.8rem;color:var(--text-sub)'>Dom7</span>", mode: 'arpeggio', targetSel: 'chordTypeSelect', targetVal: 'dom7' },
+            { label: "Seventh chords<br><span style='font-size:0.8rem;color:var(--text-sub)'>Min7</span>", mode: 'arpeggio', targetSel: 'chordTypeSelect', targetVal: 'min7' },
+            { label: "Modes<br><span style='font-size:0.8rem;color:var(--text-sub)'>Permutations</span>", mode: 'scale', targetSel: 'scaleSelect', targetVal: 'major' }
+        ]
+    };
+
+    if(btnGeneratePlan) {
+        btnGeneratePlan.addEventListener('click', () => {
+            // 1. 隨機抽取四個維度的項目
+            const r = PRACTICE_PLAN_DATA.rhythms[Math.floor(Math.random() * PRACTICE_PLAN_DATA.rhythms.length)];
+            const t = PRACTICE_PLAN_DATA.techniques[Math.floor(Math.random() * PRACTICE_PLAN_DATA.techniques.length)];
+            const k = PRACTICE_PLAN_DATA.keys[Math.floor(Math.random() * PRACTICE_PLAN_DATA.keys.length)];
+            const c = PRACTICE_PLAN_DATA.concepts[Math.floor(Math.random() * PRACTICE_PLAN_DATA.concepts.length)];
+
+            // 2. 更新面板顯示文字
+            planRhythmEl.innerHTML = r;
+            planTechniqueEl.innerHTML = t;
+            planKeyEl.innerHTML = k.label;
+            planConceptEl.innerHTML = c.label;
+
+            // 加入觸發動畫
+            [planRhythmEl, planTechniqueEl, planKeyEl, planConceptEl].forEach(el => {
+                el.classList.remove('active');
+                void el.offsetWidth; // 觸發 reflow
+                el.classList.add('active');
+            });
+
+            // 3. 連動指板模組 (修改 Select 選項)
+            exModeSel.value = c.mode;
+            keySel.value = k.val;
+            
+            // 依據產生的 Concept 模式切換對應的選單
+            if(c.mode === 'scale') {
+                scaleSel.value = c.targetVal;
+            } else if (c.mode === 'arpeggio') {
+                chordSel.value = c.targetVal;
+                // 自動設定起音配置為 E 弦或 B 弦 (隨機)
+                arpStrSel.value = (Math.random() > 0.5) ? "3" : "4"; 
+            }
+
+            // 4. 強制更新指板與介面狀態
+            syncFretboardState();
+            
+            // 5. 畫面自動平滑捲動至指板區塊
+            document.getElementById('fretboard').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+    }
+
 
     /* =========================================================
        INITIALIZATION

@@ -22,6 +22,7 @@
             --note-extension: #9B59B6; 
             --note-ghost: #2C2C2C;  
             
+            /* 新增：平行調與經過音專用顏色 */
             --note-common: #3498DB; 
             --note-major: #F1C40F; 
             --note-minor: #9B59B6; 
@@ -127,7 +128,7 @@
         ========================================= */
         .switches-area { display: flex; gap: 10px; align-items: center; }
         .controls-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; width: 100%; margin-top: 12px; }
-        #exerciseModeSelect, #stringPairSelect, #stringTripletSelect, #stringQuadSelect, #stringQuintSelect, #chordTypeSelect, #arpeggioStringSelect, #parallelModeSelect, #chromaticFilterSelect, #arpeggioInversionSelect { border-color: var(--note-active); font-weight: bold; }
+        #exerciseModeSelect, #stringPairSelect, #stringTripletSelect, #stringQuadSelect, #stringQuintSelect, #chordTypeSelect, #arpeggioStringSelect, #parallelModeSelect, #chromaticFilterSelect { border-color: var(--note-active); font-weight: bold; }
 
         .pos-buttons-container {
             display: flex; gap: 8px; overflow-x: auto; padding: 12px 20px;
@@ -157,14 +158,14 @@
         .reset-zoom-btn:hover { background: var(--note-active); border-color: var(--note-active); }
 
         /* =========================================
-           MODULE 2: CHORD TONE TRAINER
+           MODULE 2 & 4: TONE BOXES & TRAINERS
         ========================================= */
         .trainer-stage { padding: 30px 20px; display: flex; flex-direction: column; align-items: center; gap: 25px; background: var(--bg-body); }
-        .chord-display { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center;}
-        .chord-nav-btn { background: var(--btn-bg); border: 1px solid var(--btn-border); color: var(--text-main); width: 40px; height: 40px; border-radius: 50%; font-size: 1.2rem; font-weight: bold; cursor: pointer; transition: 0.2s; flex-shrink: 0;}
+        .chord-display { display: flex; align-items: center; gap: 15px; }
+        .chord-nav-btn { background: var(--btn-bg); border: 1px solid var(--btn-border); color: var(--text-main); width: 40px; height: 40px; border-radius: 50%; font-size: 1.2rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .chord-nav-btn:hover { background: var(--note-active); border-color: var(--note-active); }
-        .current-chord-text { font-size: 2.5rem; font-weight: bold; color: var(--note-active); min-width: 90px; text-align: center; margin: 0; }
-        .chord-type-selector { font-size: 1.1rem; padding: 5px 10px; font-weight: bold; color: var(--text-main); background: var(--bg-app); border: 2px solid var(--btn-border); border-radius: 8px; text-align: center; }
+        .current-chord-text { font-size: 2.5rem; font-weight: bold; color: var(--note-active); min-width: 120px; text-align: center; margin: 0; }
+        .chord-type-selector { font-size: 1.2rem; padding: 5px 10px; font-weight: bold; color: var(--text-main); background: var(--bg-app); border: 2px solid var(--btn-border); border-radius: 8px; text-align: center; }
 
         .tone-boxes-container { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; width: 100%; max-width: 500px; }
         .tone-box-wrapper { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; min-width: 70px; }
@@ -249,12 +250,6 @@
                     <select id="exerciseModeSelect">
                         <option value="scale">模式: 全指板音階</option>
                         <option value="arpeggio" selected>模式: 和弦指法</option>
-                        <option disabled>──────────</option>
-                        <option value="diatonic">探索: 大調順階和弦 (Major Diatonic)</option>
-                        <option value="diatonic_minor">探索: 小調順階和弦 (Minor Diatonic)</option>
-                        <option value="modes">探索: 大調調式佈局 (Major Modes)</option>
-                        <option value="modes_minor">探索: 小調調式佈局 (Minor Modes)</option>
-                        <option disabled>──────────</option>
                         <option value="pair_drill">模式: 雙弦模進</option>
                         <option value="triplet_drill">模式: 三弦模進</option>
                         <option value="quad_drill">模式: 四弦模進</option>
@@ -323,13 +318,6 @@
                         <option value="2">起始弦: A String</option>
                         <option value="1">起始弦: D String</option>
                     </select>
-                    
-                    <select id="arpeggioInversionSelect" class="hidden">
-                        <option value="0">Root Position</option>
-                        <option value="1">1st Inversion</option>
-                        <option value="2">2nd Inversion</option>
-                        <option value="3">3rd Inversion</option>
-                    </select>
 
                     <select id="stringPairSelect" class="hidden">
                         <option value="0,1">D & G (High)</option>
@@ -372,6 +360,49 @@
             </div>
         </div>
 
+        <!-- MODULE 4: PRACTICE PLAN GENERATOR -->
+        <div class="module-panel">
+            <div class="header-section">
+                <div class="header-top">
+                    <h1>Bass Fundamentals Practice Plan</h1>
+                    <div class="switches-area">
+                        <span style="font-size: 0.85rem; color: var(--text-sub);">Build your daily routine</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="trainer-stage" style="padding: 25px 20px;">
+                <div class="tone-boxes-container" style="max-width: 1000px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    
+                    <div class="tone-box-wrapper">
+                        <span class="tone-box-label">1. RHYTHM</span>
+                        <div class="tone-box" id="planRhythm" style="font-size: 1.1rem; text-align: center; padding: 15px;">?</div>
+                    </div>
+                    
+                    <div class="tone-box-wrapper">
+                        <span class="tone-box-label">2. TECHNIQUE</span>
+                        <div class="tone-box" id="planTechnique" style="font-size: 1.1rem; text-align: center; padding: 15px;">?</div>
+                    </div>
+                    
+                    <div class="tone-box-wrapper">
+                        <span class="tone-box-label">3. KEY</span>
+                        <div class="tone-box root-box" id="planKey" style="font-size: 2rem;">?</div>
+                    </div>
+                    
+                    <div class="tone-box-wrapper">
+                        <span class="tone-box-label">4. CONCEPT</span>
+                        <div class="tone-box" id="planConcept" style="font-size: 1.1rem; text-align: center; padding: 15px;">?</div>
+                    </div>
+
+                </div>
+
+                <button class="submit-btn" id="btnGeneratePlan" style="margin-top: 25px; max-width: 400px; display: flex; justify-content: center; align-items: center; gap: 10px;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><circle cx="15.5" cy="8.5" r="1.5"></circle><circle cx="15.5" cy="15.5" r="1.5"></circle><circle cx="8.5" cy="15.5" r="1.5"></circle></svg>
+                    產生隨機練習並顯示把位
+                </button>
+            </div>
+        </div>
+
         <div class="module-panel">
             <div class="header-section">
                 <div class="header-top">
@@ -380,7 +411,6 @@
                         <select id="trainerSeqMode">
                             <option value="chromatic">進行: 半音階</option>
                             <option value="circle5ths">進行: 五度圈</option>
-                            <option value="diatonic">進行: 大調順階</option>
                             <option value="random">進行: 隨機</option>
                         </select>
                         <label class="toggle-container">
@@ -409,20 +439,12 @@
                         <option value="aug7">Dom7#5</option>
                         <option value="dim7">dim7</option>
                     </select>
-                    
-                    <select class="chord-type-selector" id="trainerInversion">
-                        <option value="0">Root Pos</option>
-                        <option value="1">1st Inv</option>
-                        <option value="2">2nd Inv</option>
-                        <option value="3">3rd Inv</option>
-                    </select>
-                    
                     <button class="chord-nav-btn" id="btnNextRoot">&gt;</button>
                 </div>
 
                 <div class="tone-boxes-container">
                     <div class="tone-box-wrapper">
-                        <span class="tone-box-label" id="lblBox0">Root</span>
+                        <span class="tone-box-label">Root (I)</span>
                         <div class="tone-box root-box" id="box0">C</div>
                     </div>
                     <div class="tone-box-wrapper">
